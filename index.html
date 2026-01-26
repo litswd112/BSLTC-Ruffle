@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ruffle Web App 🇮🇹</title>
+
+<style>
+body {
+  font-family: 'Arial', sans-serif;
+  background: radial-gradient(circle, #fff, #ddd);
+  text-align: center;
+  overflow-x: hidden;
+}
+
+h1 { margin: 10px; }
+
+#stage {
+  position: relative;
+  height: 300px;
+}
+
+/* Character */
+#italian {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 60px;
+}
+
+.head {
+  width: 90px;
+  height: 90px;
+  background: #f1c27d;
+  border-radius: 50%;
+  margin: auto;
+  position: relative;
+}
+
+.glasses {
+  position: absolute;
+  top: 35px;
+  left: 10px;
+  width: 70px;
+  height: 25px;
+  border: 4px solid red;
+  border-radius: 12px;
+}
+
+.arm {
+  width: 60px;
+  height: 10px;
+  background: #f1c27d;
+  position: absolute;
+  top: 100px;
+  transform-origin: left center;
+}
+
+.arm.left { left: -50px; animation: juggleLeft 2s infinite; }
+.arm.right { right: -50px; animation: juggleRight 2s infinite; }
+
+@keyframes juggleLeft {
+  0%,100% { transform: rotate(20deg); }
+  50% { transform: rotate(-40deg); }
+}
+@keyframes juggleRight {
+  0%,100% { transform: rotate(-20deg); }
+  50% { transform: rotate(40deg); }
+}
+
+/* Flying spoons */
+.spoon {
+  position: absolute;
+  font-size: 30px;
+  animation: fly 2s ease-in forwards;
+}
+
+@keyframes fly {
+  0% { transform: translate(0,0) rotate(0); opacity:1; }
+  100% { transform: translate(var(--x), var(--y)) rotate(360deg); opacity:1; }
+}
+
+/* Jars */
+#jars {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30px;
+}
+
+.jar {
+  width: 140px;
+  min-height: 200px;
+  border: 2px solid #888;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.5);
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.7);
+}
+
+.jar h3 { margin: 5px; }
+
+.number {
+  font-size: 22px;
+  margin: 6px;
+}
+button {
+  padding: 12px 24px;
+  font-size: 18px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎲 RUFFLE WEB APP 🇮🇹</h1>
+<p><em>“Calma… every spoon has a destiny.”</em></p>
+
+<button onclick="startRuffle()">START THE RUFFLE</button>
+
+<div id="stage">
+  <div id="italian">
+    <div class="head">
+      <div class="glasses"></div>
+    </div>
+    <div class="arm left"></div>
+    <div class="arm right"></div>
+  </div>
+</div>
+
+<div id="jars">
+  <div class="jar" id="A"><h3>Group A</h3></div>
+  <div class="jar" id="B"><h3>Group B</h3></div>
+  <div class="jar" id="C"><h3>Group C</h3></div>
+  <div class="jar" id="D"><h3>Group D</h3></div>
+</div>
+
+<audio id="clink" src="https://actions.google.com/sounds/v1/glass/glass_clink.ogg"></audio>
+
+<script>
+const phrases = [
+  "Mamma mia!",
+  "Attenzione!",
+  "Che fortuna!",
+  "Incredibile!",
+  "Perfetto!"
+];
+
+function speak(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT";
+  speechSynthesis.speak(u);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function startRuffle() {
+  ["A","B","C","D"].forEach(j => {
+    document.getElementById(j).innerHTML = `<h3>Group ${j}</h3>`;
+  });
+
+  let nums = Array.from({length:16}, (_,i)=>i+1);
+  shuffle(nums);
+
+  let index = 0;
+  const jars = ["A","B","C","D"];
+  const stage = document.getElementById("stage");
+  const clink = document.getElementById("clink");
+
+  jars.forEach((jar, jIndex) => {
+    for (let i = 0; i < 4; i++) {
+      const delay = index * 1800;
+
+      setTimeout(() => {
+        const spoon = document.createElement("div");
+        spoon.className = "spoon";
+        spoon.textContent = "🥄";
+        spoon.style.setProperty("--x", `${(jIndex-1.5)*200}px`);
+        spoon.style.setProperty("--y", `180px`);
+        stage.appendChild(spoon);
+
+        speak(phrases[Math.floor(Math.random()*phrases.length)]);
+
+        setTimeout(() => {
+          spoon.remove();
+          clink.currentTime = 0;
+          clink.play();
+
+          const num = document.createElement("div");
+          num.className = "number";
+          num.textContent = "🥄 " + nums[index++];
+          document.getElementById(jar).appendChild(num);
+        }, 1800);
+
+      }, delay);
+    }
+  });
+
+  setTimeout(() => speak("Ecco il risultato finale!"), 30000);
+}
+</script>
+
+</body>
+</html>
+
