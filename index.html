@@ -127,12 +127,16 @@ for (let i = 1; i <= totalSpoons; i++) {
 function animate() {
   angleOffset += 0.02;
   spoons.forEach(spoon => {
-    const centerX = 150;
-    const centerY = 120; 
-    const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - 25;
-    const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - 25;
-    spoon.el.style.left = x + 'px';
-    spoon.el.style.top = y + 'px';
+    const containerRect = container.getBoundingClientRect(); // Add this at the start of the loop
+const centerX = containerRect.width / 2;
+const centerY = containerRect.height / 2 - 50; // Raise wheel above character
+
+const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - spoon.el.width/2;
+const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - spoon.el.height/2;
+
+spoon.el.style.left = x + 'px';
+spoon.el.style.top = y + 'px';
+
   });
   requestAnimationFrame(animate);
 }
@@ -197,6 +201,7 @@ document.getElementById('drawButton').addEventListener('click', () => {
 
 </body>
 </html>
+
 
 
 
