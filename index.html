@@ -177,11 +177,12 @@ function getRandomPot(){
 }
 
 // Fly spoon to pot with upright orientation
-function flyToPot(spoon, potKey){
+function flyToPot(spoon, potKey) {
   spoon.flying = true;
 
-  const potContainer = document.getElementById('pot' + potKey);
-  const potRect = potContainer.getBoundingClientRect();
+  // Use the pot image itself for exact center
+  const potImg = document.querySelector(`#${potKey} > img`);
+  const potRect = potImg.getBoundingClientRect();
 
   const spoonWidth = spoon.el.offsetWidth;
   const spoonHeight = spoon.el.offsetHeight;
@@ -190,50 +191,46 @@ function flyToPot(spoon, potKey){
   const startX = startRect.left + window.scrollX + spoonWidth/2;
   const startY = startRect.top + window.scrollY + spoonHeight/2;
 
-  // Destination: bottom center of pot
+  // Center of pot image
   const destX = potRect.left + window.scrollX + potRect.width/2;
-  const destY = potRect.top + window.scrollY + potRect.height - spoonHeight/2 - 10;
+  const destY = potRect.top + window.scrollY + potRect.height/2;
 
   spoon.el.style.position = 'absolute';
   spoon.el.style.zIndex = 1000;
   document.body.appendChild(spoon.el);
 
-  const midX = (startX + destX)/2 + (Math.random()*20 - 10);
+  const midX = (startX + destX)/2 + (Math.random()*20 -10);
   const midY = (startY + destY)/2 - 120;
 
   let t=0;
   const duration=60;
 
-  function animateArc(){
+  function animateArc() {
     t++;
     const progress = t/duration;
-
-    const x = (1-progress)*(1-progress)*startX
-            + 2*(1-progress)*progress*midX
-            + progress*progress*destX;
-    const y = (1-progress)*(1-progress)*startY
-            + 2*(1-progress)*progress*midY
-            + progress*progress*destY;
+    const x = (1-progress)*(1-progress)*startX + 2*(1-progress)*progress*midX + progress*progress*destX;
+    const y = (1-progress)*(1-progress)*startY + 2*(1-progress)*progress*midY + progress*progress*destY;
 
     spoon.el.style.left = (x - spoonWidth/2) + 'px';
     spoon.el.style.top = (y - spoonHeight/2) + 'px';
-    spoon.el.style.transform = `rotate(0deg)`; // upright while flying
+    spoon.el.style.transform = `rotate(0deg)`;
 
     if(t<duration){
       requestAnimationFrame(animateArc);
     } else {
-      // Land in pot with slight fanning rotation
+      // Land in the spoons-in-pot container
+      const potContainer = document.getElementById('pot'+potKey);
       const index = potContainer.children.length;
-      const rotation = -10 + index*7; // fan effect
+      const rotation = -10 + index*7;
       spoon.el.style.position = 'relative';
       spoon.el.style.left = '0px';
       spoon.el.style.top = '0px';
       spoon.el.style.transform = `rotate(${rotation}deg)`;
       potContainer.appendChild(spoon.el);
-
       spoon.flying = false;
     }
   }
+
   animateArc();
 }
 
@@ -263,3 +260,4 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
 
 </body>
 </html>
+
