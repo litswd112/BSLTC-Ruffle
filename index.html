@@ -19,9 +19,8 @@
   #character-container {
     position: relative;
     width: 560px;
-    height: 500px;
+    height: 400px;
     margin: 20px auto;
-    border: 1px solid transparent;
   }
 
   #character {
@@ -38,13 +37,10 @@
     transform-origin: 50% 50%;
   }
 
-  /* Pots positioned absolutely inside container */
   .pots {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
+    margin-top: 20px;
     gap: 20px;
   }
 
@@ -84,25 +80,24 @@
 
 <div id="character-container">
   <img id="character" src="uploaded_cartoon2.png" alt="Character">
+</div>
 
-  <!-- Pots are inside the same container -->
-  <div class="pots">
-    <div class="pot" id="A">
-      <img src="pot_A.png" alt="Pot A">
-      <div class="spoons-in-pot" id="potA"></div>
-    </div>
-    <div class="pot" id="B">
-      <img src="pot_B.png" alt="Pot B">
-      <div class="spoons-in-pot" id="potB"></div>
-    </div>
-    <div class="pot" id="C">
-      <img src="pot_C.png" alt="Pot C">
-      <div class="spoons-in-pot" id="potC"></div>
-    </div>
-    <div class="pot" id="D">
-      <img src="pot_D.png" alt="Pot D">
-      <div class="spoons-in-pot" id="potD"></div>
-    </div>
+<div class="pots">
+  <div class="pot" id="A">
+    <img src="pot_A.png" alt="Pot A">
+    <div class="spoons-in-pot" id="potA"></div>
+  </div>
+  <div class="pot" id="B">
+    <img src="pot_B.png" alt="Pot B">
+    <div class="spoons-in-pot" id="potB"></div>
+  </div>
+  <div class="pot" id="C">
+    <img src="pot_C.png" alt="Pot C">
+    <div class="spoons-in-pot" id="potC"></div>
+  </div>
+  <div class="pot" id="D">
+    <img src="pot_D.png" alt="Pot D">
+    <div class="spoons-in-pot" id="potD"></div>
   </div>
 </div>
 
@@ -118,7 +113,6 @@ const radius = 100;
 let angleOffset = 0;
 let spoons = [];
 
-// Track pot spoon counts
 const potCounts = { A: 0, B: 0, C: 0, D: 0 };
 const potMax = 4;
 const potElements = {
@@ -141,20 +135,19 @@ function createSpoons() {
 }
 createSpoons();
 
-// Animate spinning + juggling
+// Animate spinning above the character
 function animate() {
   angleOffset += 0.02;
   const containerRect = container.getBoundingClientRect();
   const centerX = containerRect.width / 2;
-  const centerY = containerRect.height / 2 - 100;
+  const centerY = containerRect.height / 2 - 50;
 
   spoons.forEach(spoon => {
     const baseX = centerX + radius * Math.cos(spoon.angle + angleOffset);
     const baseY = centerY + radius * Math.sin(spoon.angle + angleOffset);
-
-    const jitterX = Math.sin(angleOffset * 3 + spoon.number) * 10; 
-    const jitterY = Math.cos(angleOffset * 2 + spoon.number) * 8;
-    const rotation = angleOffset * 180 + spoon.number * 20;
+    const jitterX = Math.sin(angleOffset*3 + spoon.number)*10;
+    const jitterY = Math.cos(angleOffset*2 + spoon.number)*8;
+    const rotation = angleOffset*180 + spoon.number*20;
 
     spoon.el.style.left = (baseX + jitterX - spoon.el.width/2) + 'px';
     spoon.el.style.top = (baseY + jitterY - spoon.el.height/2) + 'px';
@@ -165,38 +158,42 @@ function animate() {
 }
 animate();
 
-// Random pot selection
+// Random pot selection with max 4
 function getRandomPot() {
   const available = Object.keys(potCounts).filter(p => potCounts[p] < potMax);
-  if (available.length === 0) return null;
-  const choice = available[Math.floor(Math.random() * available.length)];
+  if (!available.length) return null;
+  const choice = available[Math.floor(Math.random()*available.length)];
   potCounts[choice]++;
   return choice;
 }
 
-// Arc animation to pot (inside same container)
+// Animate spoon flying into the pot
 function arcToPot(spoonEl, potKey) {
-  const potContainer = document.getElementById('pot' + potKey);
-  const containerRect = container.getBoundingClientRect();
+  const potContainer = document.getElementById('pot'+potKey);
   const potRect = potContainer.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
 
-  // Spoon starting position relative to container
+  // Starting position relative to viewport
   const startRect = spoonEl.getBoundingClientRect();
-  const startX = startRect.left - containerRect.left;
-  const startY = startRect.top - containerRect.top;
+  const startX = startRect.left;
+  const startY = startRect.top;
 
-  // Destination inside pot
-  const destX = (potRect.left - containerRect.left) + potContainer.children.length * 55;
-  const destY = (potRect.top - containerRect.top);
+  // Destination relative to viewport
+  const destX = potRect.left + potContainer.children.length*55;
+  const destY = potRect.top;
 
-  const finalRotation = (Math.random() * 20 - 10);
-  const midX = (startX + destX)/2 + (Math.random()*30 - 15);
-  const midY = (startY + destY)/2 - 150 - Math.random()*30;
+  spoonEl.style.position = 'absolute';
+  spoonEl.style.zIndex = 1000;
+  document.body.appendChild(spoonEl);
 
-  let t = 0;
+  const finalRotation = (Math.random()*20 -10);
+  const midX = (startX+destX)/2 + (Math.random()*30-15);
+  const midY = (startY+destY)/2 - 150 - Math.random()*30;
+
+  let t=0;
   const duration = 60;
 
-  function animateArc() {
+  function animateArc(){
     t++;
     const progress = t/duration;
     const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
@@ -207,40 +204,37 @@ function arcToPot(spoonEl, potKey) {
     spoonEl.style.top = y + 'px';
     spoonEl.style.transform = `rotate(${rotation}deg)`;
 
-    if (t < duration) requestAnimationFrame(animateArc);
+    if(t<duration) requestAnimationFrame(animateArc);
     else {
+      // Place inside pot container
       spoonEl.style.position = 'relative';
-      spoonEl.style.left = potContainer.children.length * 55 + 'px';
+      spoonEl.style.left = potContainer.children.length*55 + 'px';
       spoonEl.style.top = '0px';
       spoonEl.style.transform = `rotate(${finalRotation}deg)`;
       potContainer.appendChild(spoonEl);
     }
   }
-
   animateArc();
 }
 
-// Draw a spoon
-document.getElementById('drawButton').addEventListener('click', () => {
-  if (spoons.length === 0) return;
-
-  const index = Math.floor(Math.random() * spoons.length);
-  const spoon = spoons.splice(index, 1)[0];
-
+// Draw button
+document.getElementById('drawButton').addEventListener('click',()=>{
+  if(!spoons.length) return;
+  const index = Math.floor(Math.random()*spoons.length);
+  const spoon = spoons.splice(index,1)[0];
   const potKey = getRandomPot();
-  if (potKey) arcToPot(spoon.el, potKey);
+  if(potKey) arcToPot(spoon.el,potKey);
 });
 
 // Reset button
-document.getElementById('resetButton').addEventListener('click', () => {
-  Object.values(potElements).forEach(pot => {
-    while (pot.firstChild) pot.removeChild(pot.firstChild);
+document.getElementById('resetButton').addEventListener('click',()=>{
+  Object.values(potElements).forEach(p=>{
+    while(p.firstChild)p.removeChild(p.firstChild);
   });
+  for(let key in potCounts) potCounts[key]=0;
 
-  for (let key in potCounts) potCounts[key] = 0;
-
-  spoons.forEach(spoon => {
-    if (spoon.el.parentElement === container) container.removeChild(spoon.el);
+  spoons.forEach(spoon=>{
+    if(spoon.el.parentElement===container) container.removeChild(spoon.el);
   });
 
   createSpoons();
@@ -249,3 +243,5 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 </body>
 </html>
+
+
