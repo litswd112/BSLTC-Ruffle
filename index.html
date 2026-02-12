@@ -175,16 +175,17 @@ function arcToPot(spoonEl, potKey) {
   const potRect = pot.getBoundingClientRect();
   const containerRect = container.getBoundingClientRect();
 
+  // Current spoon position relative to container
   const startX = spoonEl.getBoundingClientRect().left - containerRect.left;
   const startY = spoonEl.getBoundingClientRect().top - containerRect.top;
 
-  const destX = pot.children.length * 55;
-  const destY = 0;
+  // Destination inside pot
+  const destX = (potRect.left - containerRect.left) + (pot.children.length * 55); // side-by-side inside pot
+  const destY = (potRect.top - containerRect.top) + (pot.offsetHeight - spoonEl.offsetHeight - 10); // bottom padding
 
   const finalRotation = (Math.random() * 20 - 10); // -10° to +10°
-
-  const midX = (startX + destX)/2 + (Math.random()*40 - 20);
-  const midY = (startY + destY)/2 - 150 - Math.random()*30;
+  const midX = (startX + destX)/2 + (Math.random()*30 - 15); 
+  const midY = Math.min(startY, destY) - 150 - Math.random()*30;
 
   let t = 0;
   const duration = 60;
@@ -204,8 +205,8 @@ function arcToPot(spoonEl, potKey) {
     if (t < duration) requestAnimationFrame(animateArc);
     else {
       spoonEl.style.position = 'relative';
-      spoonEl.style.left = destX + 'px';
-      spoonEl.style.top = destY + 'px';
+      spoonEl.style.left = pot.children.length * 55 + 'px';
+      spoonEl.style.top = '0px';
       spoonEl.style.transform = `rotate(${finalRotation}deg)`;
       pot.appendChild(spoonEl);
     }
@@ -242,3 +243,4 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 </body>
 </html>
+
