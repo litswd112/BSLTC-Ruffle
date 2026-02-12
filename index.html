@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Juggling Spoon Animation</title>
+<title>Terra Rossa Spoon Juggle</title>
 <style>
   body {
     font-family: sans-serif;
@@ -13,20 +13,20 @@
   }
 
   h1 {
-    margin-top: 40px;
+    margin-top: 40px; /* space for title */
   }
 
   #character-container {
     position: relative;
-    width: 1000px;
+    width: 300px;
     height: 400px;
-    margin: 60px auto 20px auto;
+    margin: 20px auto 20px auto;
   }
 
   #character {
     width: 100%;
     position: absolute;
-    bottom: 0;
+    bottom: 0; /* stick character at bottom */
     left: 0;
   }
 
@@ -76,7 +76,7 @@
 <h1>Terra Rossa Spoon Juggle</h1>
 
 <div id="character-container">
-  <img id="character" src="uploaded_cartoon2.png" alt="Character">
+  <img id="character" src="uploaded_cartoon.png" alt="Character">
 </div>
 
 <div class="pots">
@@ -101,23 +101,20 @@
 <button id="drawButton">Draw a Spoon</button>
 
 <script>
-const potElements = {
-  A: document.getElementById('potA'),
-  B: document.getElementById('potB'),
-  C: document.getElementById('potC'),
-  D: document.getElementById('potD')
-};
-
 const container = document.getElementById('character-container');
 const spoons = [];
 const totalSpoons = 16;
 const radius = 100;
 let angleOffset = 0;
 
+// Track pot spoon counts
+const potCounts = { A: 0, B: 0, C: 0, D: 0 };
+const potMax = 4;
+
 // Preload spoon images
 for (let i = 1; i <= totalSpoons; i++) {
   const spoonEl = document.createElement('img');
-  spoonEl.src = `spoon_${i}.png`; // Your spoon images
+  spoonEl.src = `spoon_${i}.png`;
   spoonEl.className = 'spoon';
   container.appendChild(spoonEl);
   spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
@@ -126,42 +123,44 @@ for (let i = 1; i <= totalSpoons; i++) {
 // Animate spinning
 function animate() {
   angleOffset += 0.02;
+  const containerRect = container.getBoundingClientRect();
+  const centerX = containerRect.width / 2;
+  const centerY = containerRect.height / 2 - 50; // raise above character
+
   spoons.forEach(spoon => {
-    const containerRect = container.getBoundingClientRect(); // Add this at the start of the loop
-const centerX = containerRect.width / 2;
-const centerY = containerRect.height / 2 - 50; // Raise wheel above character
-
-const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - spoon.el.width/2;
-const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - spoon.el.height/2;
-
-spoon.el.style.left = x + 'px';
-spoon.el.style.top = y + 'px';
-
+    const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - spoon.el.width/2;
+    const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - spoon.el.height/2;
+    spoon.el.style.left = x + 'px';
+    spoon.el.style.top = y + 'px';
   });
   requestAnimationFrame(animate);
 }
 animate();
 
-// Map spoon number to pot
-function getPotKey(spoonNumber) {
-  if (spoonNumber >=1 && spoonNumber <=4) return 'A';
-  if (spoonNumber >=5 && spoonNumber <=8) return 'B';
-  if (spoonNumber >=9 && spoonNumber <=12) return 'C';
-  if (spoonNumber >=13 && spoonNumber <=16) return 'D';
+// Map spoon to random pot with 4-per-pot max
+function getRandomPot() {
+  const available = Object.keys(potCounts).filter(p => potCounts[p] < potMax);
+  if (available.length === 0) return null;
+  const choice = available[Math.floor(Math.random() * available.length)];
+  potCounts[choice]++;
+  return choice;
 }
 
 // Animate spoon along an arc to pot
 function arcToPot(spoonEl, potKey) {
-  const pot = potElements[potKey];
+  const pot = document.getElementById('pot' + potKey);
   const potRect = pot.getBoundingClientRect();
+
   const startX = parseFloat(spoonEl.style.left);
   const startY = parseFloat(spoonEl.style.top);
 
-  const destX = pot.children.length * 55; // side by side
+  // Destination inside pot: side by side
+  const destX = pot.children.length * 55; 
   const destY = 0;
 
-  const midX = (startX + destX)/2 + 50; // Midpoint offset for arc
-  const midY = startY - 150; // Height of arc
+  // Arc control point
+  const midX = (startX + destX)/2 + 50; 
+  const midY = startY - 150; 
 
   let t = 0;
   const duration = 60;
@@ -169,8 +168,6 @@ function arcToPot(spoonEl, potKey) {
   function animateArc() {
     t++;
     const progress = t/duration;
-
-    // Quadratic Bezier curve formula
     const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
     const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
 
@@ -194,14 +191,12 @@ document.getElementById('drawButton').addEventListener('click', () => {
 
   const index = Math.floor(Math.random() * spoons.length);
   const spoon = spoons.splice(index, 1)[0];
-  const potKey = getPotKey(spoon.number);
-  arcToPot(spoon.el, potKey);
+
+  const potKey = getRandomPot();
+  if (potKey) arcToPot(spoon.el, potKey);
 });
 </script>
 
 </body>
 </html>
-
-
-
 
