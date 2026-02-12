@@ -174,20 +174,21 @@ function arcToPot(spoonEl, potKey) {
   const pot = document.getElementById('pot' + potKey);
   const potRect = pot.getBoundingClientRect();
 
-  // Spoon starting position relative to viewport
+  // Spoon starting position on screen
   const startRect = spoonEl.getBoundingClientRect();
   const startX = startRect.left;
   const startY = startRect.top;
 
   // Destination inside pot
-  const destX = potRect.left + pot.children.length * 55; // horizontal offset for side-by-side
+  const destX = potRect.left + pot.children.length * 55; // side-by-side offset
   const destY = potRect.top + pot.offsetHeight - spoonEl.offsetHeight - 10; // bottom padding
 
-  // Move spoon to absolute positioning in body
+  // Move spoon to body for absolute positioning
   spoonEl.style.position = 'absolute';
+  spoonEl.style.zIndex = 1000; // ensure it’s on top
   document.body.appendChild(spoonEl);
 
-  const finalRotation = (Math.random() * 20 - 10); // -10° to +10°
+  const finalRotation = (Math.random() * 20 - 10); // -10° to +10° rotation
   const midX = (startX + destX)/2 + (Math.random()*30 - 15); 
   const midY = Math.min(startY, destY) - 150 - Math.random()*30;
 
@@ -198,6 +199,7 @@ function arcToPot(spoonEl, potKey) {
     t++;
     const progress = t / duration;
 
+    // Quadratic Bezier interpolation
     const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
     const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
     const rotation = finalRotation * progress;
@@ -208,7 +210,7 @@ function arcToPot(spoonEl, potKey) {
 
     if (t < duration) requestAnimationFrame(animateArc);
     else {
-      // Place spoon inside pot
+      // Place spoon in pot
       spoonEl.style.position = 'relative';
       spoonEl.style.left = pot.children.length * 55 + 'px';
       spoonEl.style.top = '0px';
@@ -216,9 +218,9 @@ function arcToPot(spoonEl, potKey) {
       pot.appendChild(spoonEl);
     }
   }
+
   animateArc();
 }
-
 
 // Draw a spoon
 document.getElementById('drawButton').addEventListener('click', () => {
@@ -249,5 +251,6 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 </body>
 </html>
+
 
 
