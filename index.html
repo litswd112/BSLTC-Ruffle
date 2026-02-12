@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terra Rossa Spoon Ruffle</title>
+<title>Terra Rossa Spoon Juggle</title>
 <style>
   body {
     font-family: sans-serif;
@@ -13,14 +13,14 @@
   }
 
   h1 {
-    margin-top: 40px; /* space for title */
+    margin-top: 40px;
   }
 
   #character-container {
     position: relative;
     width: 560px;
     height: 400px;
-    margin: 20px auto 20px auto;
+    margin: 20px auto;
   }
 
   #character {
@@ -72,7 +72,6 @@
     font-size: 18px;
     margin: 0 10px;
   }
-
 </style>
 </head>
 <body>
@@ -112,7 +111,7 @@ const container = document.getElementById('character-container');
 const totalSpoons = 16;
 const radius = 100;
 let angleOffset = 0;
-let spoons = []; // array of active spoons
+let spoons = [];
 
 // Track pot spoon counts
 const potCounts = { A: 0, B: 0, C: 0, D: 0 };
@@ -124,7 +123,7 @@ const potElements = {
   D: document.getElementById('potD')
 };
 
-// Function to create spoons
+// Create spoons
 function createSpoons() {
   spoons = [];
   for (let i = 1; i <= totalSpoons; i++) {
@@ -135,28 +134,22 @@ function createSpoons() {
     spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
   }
 }
-
-// Initial creation of spoons
 createSpoons();
 
-// Animate spinning
+// Animate spinning + juggling
 function animate() {
   angleOffset += 0.02;
   const containerRect = container.getBoundingClientRect();
   const centerX = containerRect.width / 2;
-  const centerY = containerRect.height / 2 - 50; // above character
+  const centerY = containerRect.height / 2 - 50;
 
   spoons.forEach(spoon => {
-    // Base circular motion
     const baseX = centerX + radius * Math.cos(spoon.angle + angleOffset);
     const baseY = centerY + radius * Math.sin(spoon.angle + angleOffset);
 
-    // Add some random jitter to simulate juggling
     const jitterX = Math.sin(angleOffset * 3 + spoon.number) * 10; 
     const jitterY = Math.cos(angleOffset * 2 + spoon.number) * 8;
-
-    // Apply rotation to the spoon
-    const rotation = angleOffset * 180 + spoon.number * 20; // degrees
+    const rotation = angleOffset * 180 + spoon.number * 20;
 
     spoon.el.style.left = (baseX + jitterX - spoon.el.width/2) + 'px';
     spoon.el.style.top = (baseY + jitterY - spoon.el.height/2) + 'px';
@@ -165,10 +158,9 @@ function animate() {
 
   requestAnimationFrame(animate);
 }
-
 animate();
 
-// Get random pot with max 4 spoons
+// Random pot selection
 function getRandomPot() {
   const available = Object.keys(potCounts).filter(p => potCounts[p] < potMax);
   if (available.length === 0) return null;
@@ -177,33 +169,44 @@ function getRandomPot() {
   return choice;
 }
 
-// Animate spoon along an arc into the pot
+// Arc animation to pot with smooth landing and rotation
 function arcToPot(spoonEl, potKey) {
   const pot = document.getElementById('pot' + potKey);
-  const startX = parseFloat(spoonEl.style.left);
-  const startY = parseFloat(spoonEl.style.top);
-  const destX = pot.children.length * 55; // side by side
+  const potRect = pot.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+
+  const startX = spoonEl.getBoundingClientRect().left - containerRect.left;
+  const startY = spoonEl.getBoundingClientRect().top - containerRect.top;
+
+  const destX = pot.children.length * 55;
   const destY = 0;
 
-  const midX = (startX + destX)/2 + 50; // control point for arc
-  const midY = startY - 150;
+  const finalRotation = (Math.random() * 20 - 10); // -10° to +10°
+
+  const midX = (startX + destX)/2 + (Math.random()*40 - 20);
+  const midY = (startY + destY)/2 - 150 - Math.random()*30;
 
   let t = 0;
   const duration = 60;
 
   function animateArc() {
     t++;
-    const progress = t/duration;
+    const progress = t / duration;
+
     const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
     const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
+    const rotation = finalRotation * progress;
+
     spoonEl.style.left = x + 'px';
     spoonEl.style.top = y + 'px';
+    spoonEl.style.transform = `rotate(${rotation}deg)`;
 
     if (t < duration) requestAnimationFrame(animateArc);
     else {
       spoonEl.style.position = 'relative';
       spoonEl.style.left = destX + 'px';
       spoonEl.style.top = destY + 'px';
+      spoonEl.style.transform = `rotate(${finalRotation}deg)`;
       pot.appendChild(spoonEl);
     }
   }
@@ -221,22 +224,18 @@ document.getElementById('drawButton').addEventListener('click', () => {
   if (potKey) arcToPot(spoon.el, potKey);
 });
 
-// Reset everything
+// Reset button
 document.getElementById('resetButton').addEventListener('click', () => {
-  // Clear pots
   Object.values(potElements).forEach(pot => {
     while (pot.firstChild) pot.removeChild(pot.firstChild);
   });
 
-  // Reset pot counts
   for (let key in potCounts) potCounts[key] = 0;
 
-  // Remove existing spoons from container
   spoons.forEach(spoon => {
     if (spoon.el.parentElement === container) container.removeChild(spoon.el);
   });
 
-  // Recreate spoons
   createSpoons();
 });
 </script>
