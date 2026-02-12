@@ -132,6 +132,7 @@
 
 <script>
 const container = document.getElementById('character-container');
+const potsWrapper = document.querySelector('.pots');
 const totalSpoons = 16;
 const radius = 100;
 let angleOffset = 0;
@@ -139,6 +140,7 @@ let spoons = [];
 
 const potCounts = { A:0, B:0, C:0, D:0 };
 const potMax = 4;
+
 const potElements = {
   A: document.getElementById('potA'),
   B: document.getElementById('potB'),
@@ -146,35 +148,43 @@ const potElements = {
   D: document.getElementById('potD')
 };
 
-// Create spinning spoons
-function createSpoons() {
-  spoons = [];
-  for(let i=1; i<=totalSpoons; i++){
-    const spoonEl = document.createElement('img');
-    spoonEl.src = `spoon_${i}.png`;
-    spoonEl.className = 'spoon';
+function createSpoons(){
+  spoons=[];
+  for(let i=1;i<=totalSpoons;i++){
+    const spoonEl=document.createElement('img');
+    spoonEl.src=`spoon_${i}.png`;
+    spoonEl.className='spoon';
+    spoonEl.style.position='absolute';
     container.appendChild(spoonEl);
-    spoons.push({el:spoonEl, number:i, angle:(i/totalSpoons)*2*Math.PI});
+
+    spoons.push({
+      el:spoonEl,
+      number:i,
+      angle:(i/totalSpoons)*2*Math.PI,
+      flying:false
+    });
   }
 }
 createSpoons();
 
-// Animate spinning above character
-function animate() {
-  angleOffset += 0.02;
-  const containerRect = container.getBoundingClientRect();
-  const centerX = containerRect.width/2;
-  const centerY = containerRect.height/2 - 50;
+function animate(){
+  angleOffset+=0.02;
+
+  const centerX = container.offsetWidth/2;
+  const centerY = container.offsetHeight/2 - 50;
 
   spoons.forEach(spoon=>{
-    const baseX = centerX + radius*Math.cos(spoon.angle + angleOffset);
-    const baseY = centerY + radius*Math.sin(spoon.angle + angleOffset);
+    if(spoon.flying) return;
+
+    const baseX=centerX + radius*Math.cos(spoon.angle+angleOffset);
+    const baseY=centerY + radius*Math.sin(spoon.angle+angleOffset);
+
     const jitterX = Math.sin(angleOffset*3 + spoon.number)*10;
     const jitterY = Math.cos(angleOffset*2 + spoon.number)*8;
     const rotation = angleOffset*180 + spoon.number*20;
 
-    spoon.el.style.left = (baseX + jitterX - spoon.el.width/2) + 'px';
-    spoon.el.style.top = (baseY + jitterY - spoon.el.height/2) + 'px';
+    spoon.el.style.left = (baseX + jitterX - 25) + 'px';
+    spoon.el.style.top = (baseY + jitterY - 25) + 'px';
     spoon.el.style.transform = `rotate(${rotation}deg)`;
   });
 
@@ -182,8 +192,7 @@ function animate() {
 }
 animate();
 
-// Random pot selection
-function getRandomPot() {
+function getRandomPot(){
   const available = Object.keys(potCounts).filter(p=>potCounts[p]<potMax);
   if(!available.length) return null;
   const choice = available[Math.floor(Math.random()*available.length)];
@@ -191,77 +200,96 @@ function getRandomPot() {
   return choice;
 }
 
-// Animate spoon into pot using hidden target
-function arcToPot(spoonEl, potKey) {
-  const target = document.getElementById('target'+potKey);
-  const targetRect = target.getBoundingClientRect();
+function flyToPot(spoon, potKey){
 
-  const startRect = spoonEl.getBoundingClientRect();
-  const startX = startRect.left + startRect.width/2 + window.scrollX;
-  const startY = startRect.top + startRect.height/2 + window.scrollY;
+  spoon.flying = true;
 
-  const destX = targetRect.left + window.scrollX;
-  const destY = targetRect.top + window.scrollY;
+  const potContainer = potElements[potKey];
 
-  spoonEl.style.position = 'absolute';
-  spoonEl.style.zIndex = 1000;
-  document.body.appendChild(spoonEl);
+  // Get destination relative to page
+  const potRect = potContainer.getBoundingClientRect();
+  const pageX = potRect.left + window.scrollX;
+  const pageY = potRect.top + window.scrollY;
+
+  const offsetIndex = potContainer.children.length;
+
+  const destX = pageX + offsetIndex*45 + 20;
+  const destY = pageY + 20;
+
+  const startRect = spoon.el.getBoundingClientRect();
+  const startX = startRect.left + window.scrollX;
+  const startY = startRect.top + window.scrollY;
+
+  spoon.el.style.position='absolute';
+  spoon.el.style.zIndex=1000;
+  document.body.appendChild(spoon.el);
+
+  const midX = (startX+destX)/2;
+  const midY = (startY+destY)/2 - 120;
 
   const finalRotation = (Math.random()*20 - 10);
-  const midX = (startX + destX)/2 + (Math.random()*20 - 10);
-  const midY = (startY + destY)/2 - 100;
+
   let t=0;
-  const duration = 60;
+  const duration=60;
 
-  function animateArc() {
+  function animateArc(){
     t++;
-    const progress = t/duration;
-    const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
-    const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
-    const rotation = finalRotation * progress;
+    const progress=t/duration;
 
-    spoonEl.style.left = (x - spoonEl.width/2) + 'px';
-    spoonEl.style.top = (y - spoonEl.height/2) + 'px';
-    spoonEl.style.transform = `rotate(${rotation}deg)`;
+    const x = (1-progress)*(1-progress)*startX
+            + 2*(1-progress)*progress*midX
+            + progress*progress*destX;
 
-    if(t < duration) requestAnimationFrame(animateArc);
-    else {
-      const potContainer = document.getElementById('pot'+potKey);
-      spoonEl.style.position = 'relative';
-      spoonEl.style.left = potContainer.children.length * 55 + 'px';
-      spoonEl.style.top = '0px';
-      spoonEl.style.transform = `rotate(${finalRotation}deg)`;
-      potContainer.appendChild(spoonEl);
+    const y = (1-progress)*(1-progress)*startY
+            + 2*(1-progress)*progress*midY
+            + progress*progress*destY;
+
+    spoon.el.style.left = x + 'px';
+    spoon.el.style.top = y + 'px';
+    spoon.el.style.transform = `rotate(${finalRotation*progress}deg)`;
+
+    if(t<duration){
+      requestAnimationFrame(animateArc);
+    }else{
+      spoon.el.style.position='relative';
+      spoon.el.style.left='0px';
+      spoon.el.style.top='0px';
+      spoon.el.style.transform=`rotate(${finalRotation}deg)`;
+      potContainer.appendChild(spoon.el);
     }
   }
 
   animateArc();
 }
 
-// Draw button
 document.getElementById('drawButton').addEventListener('click', ()=>{
   if(!spoons.length) return;
-  const index = Math.floor(Math.random()*spoons.length);
-  const spoon = spoons.splice(index,1)[0];
-  const potKey = getRandomPot();
-  if(potKey) arcToPot(spoon.el, potKey);
+
+  const index=Math.floor(Math.random()*spoons.length);
+  const spoon=spoons.splice(index,1)[0];
+
+  const potKey=getRandomPot();
+  if(potKey) flyToPot(spoon,potKey);
 });
 
-// Reset
 document.getElementById('resetButton').addEventListener('click', ()=>{
+
   Object.values(potElements).forEach(p=>{
     while(p.firstChild) p.removeChild(p.firstChild);
   });
+
   for(let key in potCounts) potCounts[key]=0;
 
   spoons.forEach(spoon=>{
-    if(spoon.el.parentElement===container) container.removeChild(spoon.el);
+    if(spoon.el.parentElement) spoon.el.remove();
   });
 
   createSpoons();
 });
 </script>
 
+
 </body>
 </html>
+
 
