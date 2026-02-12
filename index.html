@@ -11,71 +11,106 @@
     background-color: #fdf6e3;
     overflow: hidden;
   }
+
+  h1 {
+    margin-top: 20px;
+  }
+
   #character-container {
     position: relative;
     width: 300px;
-    height: 400px;
-    margin: 70px auto;
+    height: 400px; /* for spinning wheel */
+    margin: 40px auto 20px auto;
   }
+
   #character {
     width: 100%;
     position: absolute;
     bottom: 0;
     left: 0;
   }
+
   .spoon {
     position: absolute;
     width: 50px;
     height: 50px;
     transform-origin: 50% 50%;
   }
+
   .pots {
     display: flex;
     justify-content: center;
-    margin: 20px;
+    margin-top: 20px;
     gap: 20px;
   }
+
   .pot {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 120px;
     background-color: #c1440e;
-    border-radius: 50%;
+    border-radius: 10px;
     color: white;
-    line-height: 80px;
+    line-height: 20px;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 24px;
     position: relative;
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
+
+  .spoons-in-pot {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+  }
+
   #drawButton {
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 18px;
   }
+
 </style>
 </head>
 <body>
 
-<h1>Spinning Spoon Juggle</h1>
+<h1>Terra Rossa Spoon Juggle</h1>
 
 <div id="character-container">
   <img id="character" src="uploaded_cartoon.png" alt="Character">
 </div>
 
 <div class="pots">
-  <div class="pot" id="A">A</div>
-  <div class="pot" id="B">B</div>
-  <div class="pot" id="C">C</div>
-  <div class="pot" id="D">D</div>
+  <div class="pot" id="A">
+    A
+    <div class="spoons-in-pot" id="potA"></div>
+  </div>
+  <div class="pot" id="B">
+    B
+    <div class="spoons-in-pot" id="potB"></div>
+  </div>
+  <div class="pot" id="C">
+    C
+    <div class="spoons-in-pot" id="potC"></div>
+  </div>
+  <div class="pot" id="D">
+    D
+    <div class="spoons-in-pot" id="potD"></div>
+  </div>
 </div>
 
 <button id="drawButton">Draw a Spoon</button>
 
 <script>
 const potElements = {
-  A: document.getElementById('A'),
-  B: document.getElementById('B'),
-  C: document.getElementById('C'),
-  D: document.getElementById('D')
+  A: document.getElementById('potA'),
+  B: document.getElementById('potB'),
+  C: document.getElementById('potC'),
+  D: document.getElementById('potD')
 };
 
 const container = document.getElementById('character-container');
@@ -84,10 +119,10 @@ const totalSpoons = 16;
 const radius = 100;
 let angleOffset = 0;
 
-// Preload individual spoon images (spoon_1.png ... spoon_16.png)
+// Preload spoon images
 for (let i = 1; i <= totalSpoons; i++) {
   const spoonEl = document.createElement('img');
-  spoonEl.src = `spoon_${i}.png`; // Will use your actual images
+  spoonEl.src = `spoon_${i}.png`; // Use your individual spoon images
   spoonEl.className = 'spoon';
   container.appendChild(spoonEl);
   spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
@@ -97,8 +132,10 @@ for (let i = 1; i <= totalSpoons; i++) {
 function animate() {
   angleOffset += 0.02;
   spoons.forEach(spoon => {
-    const x = 150 + radius * Math.cos(spoon.angle + angleOffset) - 25;
-    const y = 150 + radius * Math.sin(spoon.angle + angleOffset) - 25;
+    const centerX = 150;
+    const centerY = 120; // raised above character
+    const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - 25;
+    const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - 25;
     spoon.el.style.left = x + 'px';
     spoon.el.style.top = y + 'px';
   });
@@ -106,44 +143,54 @@ function animate() {
 }
 animate();
 
-// Draw a spoon and animate falling into a random pot
+// Function to determine which pot the spoon goes to
+function getPotKey(spoonNumber) {
+  if (spoonNumber >=1 && spoonNumber <=4) return 'A';
+  if (spoonNumber >=5 && spoonNumber <=8) return 'B';
+  if (spoonNumber >=9 && spoonNumber <=12) return 'C';
+  if (spoonNumber >=13 && spoonNumber <=16) return 'D';
+}
+
+// Animate spoon falling into the pot
+function fallToPot(spoonEl, potKey) {
+  const pot = potElements[potKey];
+  const startX = parseFloat(spoonEl.style.left);
+  const startY = parseFloat(spoonEl.style.top);
+
+  const potRect = pot.getBoundingClientRect();
+  const destX = potRect.left + potRect.width/2 - 25;
+  const destY = potRect.top + 20;
+
+  let t = 0;
+  const duration = 60;
+  function animateFall() {
+    t++;
+    const progress = t/duration;
+    const x = startX + (destX - startX) * progress;
+    const y = startY + (destY - startY) * progress;
+    spoonEl.style.left = x + 'px';
+    spoonEl.style.top = y + 'px';
+    if (t < duration) requestAnimationFrame(animateFall);
+    else {
+      spoonEl.style.position = 'relative';
+      spoonEl.style.left = '0px';
+      spoonEl.style.top = '0px';
+      pot.appendChild(spoonEl); // add to correct pot
+    }
+  }
+  animateFall();
+}
+
+// Draw button
 document.getElementById('drawButton').addEventListener('click', () => {
   if (spoons.length === 0) return;
 
   const index = Math.floor(Math.random() * spoons.length);
   const spoon = spoons.splice(index, 1)[0];
-
-  const potKeys = Object.keys(potElements);
-  const potKey = potKeys[Math.floor(Math.random() * potKeys.length)];
-  const pot = potElements[potKey];
-  const rect = pot.getBoundingClientRect();
-
-  const spoonEl = spoon.el;
-  const startX = parseFloat(spoonEl.style.left);
-  const startY = parseFloat(spoonEl.style.top);
-
-  let t = 0;
-  const duration = 60;
-  function fall() {
-    t++;
-    const progress = t/duration;
-    const x = startX + (rect.left + 40 - startX) * progress;
-    const y = startY + (rect.top - startY) * progress;
-    spoonEl.style.left = x + 'px';
-    spoonEl.style.top = y + 'px';
-    if (t < duration) requestAnimationFrame(fall);
-    else {
-      spoonEl.style.left = x + 'px';
-      spoonEl.style.top = y + 'px';
-      pot.appendChild(spoonEl); // Place spoon in pot
-    }
-  }
-  fall();
+  const potKey = getPotKey(spoon.number);
+  fallToPot(spoon.el, potKey);
 });
 </script>
 
 </body>
 </html>
-
-
-
