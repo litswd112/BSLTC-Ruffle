@@ -144,17 +144,28 @@ function animate() {
   angleOffset += 0.02;
   const containerRect = container.getBoundingClientRect();
   const centerX = containerRect.width / 2;
-  const centerY = containerRect.height / 2 - 50; // raised above character
+  const centerY = containerRect.height / 2 - 50; // above character
 
   spoons.forEach(spoon => {
-    const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - spoon.el.width/2;
-    const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - spoon.el.height/2;
-    spoon.el.style.left = x + 'px';
-    spoon.el.style.top = y + 'px';
+    // Base circular motion
+    const baseX = centerX + radius * Math.cos(spoon.angle + angleOffset);
+    const baseY = centerY + radius * Math.sin(spoon.angle + angleOffset);
+
+    // Add some random jitter to simulate juggling
+    const jitterX = Math.sin(angleOffset * 3 + spoon.number) * 10; 
+    const jitterY = Math.cos(angleOffset * 2 + spoon.number) * 8;
+
+    // Apply rotation to the spoon
+    const rotation = angleOffset * 180 + spoon.number * 20; // degrees
+
+    spoon.el.style.left = (baseX + jitterX - spoon.el.width/2) + 'px';
+    spoon.el.style.top = (baseY + jitterY - spoon.el.height/2) + 'px';
+    spoon.el.style.transform = `rotate(${rotation}deg)`;
   });
 
   requestAnimationFrame(animate);
 }
+
 animate();
 
 // Get random pot with max 4 spoons
@@ -232,5 +243,6 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 </body>
 </html>
+
 
 
