@@ -59,15 +59,6 @@
     display: block;
   }
 
-  .target {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
-
   .spoons-in-pot {
     position: absolute;
     bottom: 10px;
@@ -105,22 +96,18 @@
 <div class="pots">
   <div class="pot" id="A">
     <img src="pot_A.png" alt="Pot A">
-    <div class="target"></div>
     <div class="spoons-in-pot" id="potA"></div>
   </div>
   <div class="pot" id="B">
     <img src="pot_B.png" alt="Pot B">
-    <div class="target"></div>
     <div class="spoons-in-pot" id="potB"></div>
   </div>
   <div class="pot" id="C">
     <img src="pot_C.png" alt="Pot C">
-    <div class="target"></div>
     <div class="spoons-in-pot" id="potC"></div>
   </div>
   <div class="pot" id="D">
     <img src="pot_D.png" alt="Pot D">
-    <div class="target"></div>
     <div class="spoons-in-pot" id="potD"></div>
   </div>
 </div>
@@ -145,6 +132,14 @@ const potElements = {
   D: document.getElementById('potD')
 };
 
+// Precomputed absolute coordinates of pot centers (adjust if layout changes)
+const potCenters = {
+  A: { x: window.innerWidth*0.15, y: 600 },
+  B: { x: window.innerWidth*0.38, y: 600 },
+  C: { x: window.innerWidth*0.61, y: 600 },
+  D: { x: window.innerWidth*0.84, y: 600 }
+};
+
 // Create spoons
 function createSpoons(){
   spoons = [];
@@ -166,7 +161,7 @@ function animate(){
   const centerY = container.offsetHeight/2 - 50;
 
   spoons.forEach(spoon=>{
-    if(spoon.flying) return; // skip flying spoons
+    if(spoon.flying) return;
     const baseX = centerX + 100*Math.cos(spoon.angle + angleOffset);
     const baseY = centerY + 100*Math.sin(spoon.angle + angleOffset);
     const jitterX = Math.sin(angleOffset*3 + spoon.number)*10;
@@ -190,22 +185,19 @@ function getRandomPot(){
   return choice;
 }
 
-// Fly spoon to pot using hidden target
+// Animate spoon to absolute coordinates
 function flyToPot(spoon, potKey){
   spoon.flying = true;
 
-  const target = document.querySelector(`#${potKey} .target`);
-  const targetRect = target.getBoundingClientRect();
-
+  const target = potCenters[potKey];
   const spoonWidth = spoon.el.offsetWidth;
   const spoonHeight = spoon.el.offsetHeight;
-
   const startRect = spoon.el.getBoundingClientRect();
   const startX = startRect.left + window.scrollX + spoonWidth/2;
   const startY = startRect.top + window.scrollY + spoonHeight/2;
 
-  const destX = targetRect.left + window.scrollX + targetRect.width/2;
-  const destY = targetRect.top + window.scrollY + targetRect.height/2;
+  const destX = target.x;
+  const destY = target.y;
 
   spoon.el.style.position = 'absolute';
   spoon.el.style.zIndex = 1000;
@@ -221,23 +213,23 @@ function flyToPot(spoon, potKey){
     t++;
     const progress = t/duration;
 
-    const x = (1-progress)*(1-progress)*startX
-            + 2*(1-progress)*progress*midX
+    const x = (1 - progress)*(1 - progress)*startX
+            + 2*(1 - progress)*progress*midX
             + progress*progress*destX;
-    const y = (1-progress)*(1-progress)*startY
-            + 2*(1-progress)*progress*midY
+    const y = (1 - progress)*(1 - progress)*startY
+            + 2*(1 - progress)*progress*midY
             + progress*progress*destY;
 
     spoon.el.style.left = (x - spoonWidth/2) + 'px';
     spoon.el.style.top = (y - spoonHeight/2) + 'px';
-    spoon.el.style.transform = `rotate(0deg)`; // upright while flying
+    spoon.el.style.transform = `rotate(0deg)`;
 
-    if(t<duration){
+    if(t < duration){
       requestAnimationFrame(animateArc);
     } else {
       const potContainer = document.getElementById('pot'+potKey);
       const index = potContainer.children.length;
-      const rotation = -10 + index*7; // slight fan effect
+      const rotation = -10 + index*7;
       spoon.el.style.position = 'relative';
       spoon.el.style.left = '0px';
       spoon.el.style.top = '0px';
@@ -246,6 +238,7 @@ function flyToPot(spoon, potKey){
       spoon.flying = false;
     }
   }
+
   animateArc();
 }
 
@@ -258,7 +251,7 @@ document.getElementById('drawButton').addEventListener('click', ()=>{
   if(potKey) flyToPot(spoon,potKey);
 });
 
-// Reset
+// Reset button
 document.getElementById('resetButton').addEventListener('click', ()=>{
   Object.values(potElements).forEach(p=>{
     while(p.firstChild) p.removeChild(p.firstChild);
