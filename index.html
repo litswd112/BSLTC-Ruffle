@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spinning Spoon Juggle</title>
+<title>Juggling Spoon Animation</title>
 <style>
   body {
     font-family: sans-serif;
@@ -18,8 +18,8 @@
 
   #character-container {
     position: relative;
-    width: 300px;
-    height: 400px;
+    width: 600px;
+    height: 800px;
     margin: 40px auto 20px auto;
   }
 
@@ -146,28 +146,34 @@ function getPotKey(spoonNumber) {
   if (spoonNumber >=13 && spoonNumber <=16) return 'D';
 }
 
-// Animate spoon sliding to pot
-function slideToPot(spoonEl, potKey) {
+// Animate spoon along an arc to pot
+function arcToPot(spoonEl, potKey) {
   const pot = potElements[potKey];
   const potRect = pot.getBoundingClientRect();
   const startX = parseFloat(spoonEl.style.left);
   const startY = parseFloat(spoonEl.style.top);
 
-  // Destination x: next slot in pot
-  const destX = pot.children.length * 55; // 50px spoon + 5px gap
+  const destX = pot.children.length * 55; // side by side
   const destY = 0;
+
+  const midX = (startX + destX)/2 + 50; // Midpoint offset for arc
+  const midY = startY - 150; // Height of arc
 
   let t = 0;
   const duration = 60;
-  function animateSlide() {
+
+  function animateArc() {
     t++;
     const progress = t/duration;
-    const x = startX + (destX - startX) * progress;
-    const y = startY + (destY - startY) * progress;
+
+    // Quadratic Bezier curve formula
+    const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
+    const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
+
     spoonEl.style.left = x + 'px';
     spoonEl.style.top = y + 'px';
 
-    if (t < duration) requestAnimationFrame(animateSlide);
+    if (t < duration) requestAnimationFrame(animateArc);
     else {
       spoonEl.style.position = 'relative';
       spoonEl.style.left = destX + 'px';
@@ -175,7 +181,7 @@ function slideToPot(spoonEl, potKey) {
       pot.appendChild(spoonEl);
     }
   }
-  animateSlide();
+  animateArc();
 }
 
 // Draw button
@@ -185,12 +191,9 @@ document.getElementById('drawButton').addEventListener('click', () => {
   const index = Math.floor(Math.random() * spoons.length);
   const spoon = spoons.splice(index, 1)[0];
   const potKey = getPotKey(spoon.number);
-  slideToPot(spoon.el, potKey);
+  arcToPot(spoon.el, potKey);
 });
 </script>
 
 </body>
 </html>
-
-
-
