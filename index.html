@@ -18,7 +18,7 @@
 
   #character-container {
     position: relative;
-    width: 5500px;
+    width: 550px;
     height: 400px;
     margin: 20px auto 20px auto;
   }
@@ -26,7 +26,7 @@
   #character {
     width: 100%;
     position: absolute;
-    bottom: 0; /* stick character at bottom */
+    bottom: 0;
     left: 0;
   }
 
@@ -63,10 +63,14 @@
     gap: 5px;
   }
 
-  #drawButton {
+  #controls {
     margin-top: 20px;
+  }
+
+  #drawButton, #resetButton {
     padding: 10px 20px;
     font-size: 18px;
+    margin: 0 10px;
   }
 
 </style>
@@ -98,34 +102,49 @@
   </div>
 </div>
 
-<button id="drawButton">Draw a Spoon</button>
+<div id="controls">
+  <button id="drawButton">Draw a Spoon</button>
+  <button id="resetButton">Reset</button>
+</div>
 
 <script>
 const container = document.getElementById('character-container');
-const spoons = [];
 const totalSpoons = 16;
 const radius = 100;
 let angleOffset = 0;
+let spoons = []; // array of active spoons
 
 // Track pot spoon counts
 const potCounts = { A: 0, B: 0, C: 0, D: 0 };
 const potMax = 4;
+const potElements = {
+  A: document.getElementById('potA'),
+  B: document.getElementById('potB'),
+  C: document.getElementById('potC'),
+  D: document.getElementById('potD')
+};
 
-// Preload spoon images
-for (let i = 1; i <= totalSpoons; i++) {
-  const spoonEl = document.createElement('img');
-  spoonEl.src = `spoon_${i}.png`;
-  spoonEl.className = 'spoon';
-  container.appendChild(spoonEl);
-  spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
+// Function to create spoons
+function createSpoons() {
+  spoons = [];
+  for (let i = 1; i <= totalSpoons; i++) {
+    const spoonEl = document.createElement('img');
+    spoonEl.src = `spoon_${i}.png`;
+    spoonEl.className = 'spoon';
+    container.appendChild(spoonEl);
+    spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
+  }
 }
+
+// Initial creation of spoons
+createSpoons();
 
 // Animate spinning
 function animate() {
   angleOffset += 0.02;
   const containerRect = container.getBoundingClientRect();
   const centerX = containerRect.width / 2;
-  const centerY = containerRect.height / 2 - 50; // raise above character
+  const centerY = containerRect.height / 2 - 50; // raised above character
 
   spoons.forEach(spoon => {
     const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - spoon.el.width/2;
@@ -133,11 +152,12 @@ function animate() {
     spoon.el.style.left = x + 'px';
     spoon.el.style.top = y + 'px';
   });
+
   requestAnimationFrame(animate);
 }
 animate();
 
-// Map spoon to random pot with 4-per-pot max
+// Get random pot with max 4 spoons
 function getRandomPot() {
   const available = Object.keys(potCounts).filter(p => potCounts[p] < potMax);
   if (available.length === 0) return null;
@@ -146,21 +166,16 @@ function getRandomPot() {
   return choice;
 }
 
-// Animate spoon along an arc to pot
+// Animate spoon along an arc into the pot
 function arcToPot(spoonEl, potKey) {
   const pot = document.getElementById('pot' + potKey);
-  const potRect = pot.getBoundingClientRect();
-
   const startX = parseFloat(spoonEl.style.left);
   const startY = parseFloat(spoonEl.style.top);
-
-  // Destination inside pot: side by side
-  const destX = pot.children.length * 55; 
+  const destX = pot.children.length * 55; // side by side
   const destY = 0;
 
-  // Arc control point
-  const midX = (startX + destX)/2 + 50; 
-  const midY = startY - 150; 
+  const midX = (startX + destX)/2 + 50; // control point for arc
+  const midY = startY - 150;
 
   let t = 0;
   const duration = 60;
@@ -170,7 +185,6 @@ function arcToPot(spoonEl, potKey) {
     const progress = t/duration;
     const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
     const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
-
     spoonEl.style.left = x + 'px';
     spoonEl.style.top = y + 'px';
 
@@ -185,7 +199,7 @@ function arcToPot(spoonEl, potKey) {
   animateArc();
 }
 
-// Draw button
+// Draw a spoon
 document.getElementById('drawButton').addEventListener('click', () => {
   if (spoons.length === 0) return;
 
@@ -195,10 +209,26 @@ document.getElementById('drawButton').addEventListener('click', () => {
   const potKey = getRandomPot();
   if (potKey) arcToPot(spoon.el, potKey);
 });
+
+// Reset everything
+document.getElementById('resetButton').addEventListener('click', () => {
+  // Clear pots
+  Object.values(potElements).forEach(pot => {
+    while (pot.firstChild) pot.removeChild(pot.firstChild);
+  });
+
+  // Reset pot counts
+  for (let key in potCounts) potCounts[key] = 0;
+
+  // Remove existing spoons from container
+  spoons.forEach(spoon => {
+    if (spoon.el.parentElement === container) container.removeChild(spoon.el);
+  });
+
+  // Recreate spoons
+  createSpoons();
+});
 </script>
 
 </body>
 </html>
-
-
-
