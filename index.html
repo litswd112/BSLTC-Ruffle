@@ -171,26 +171,26 @@ function getRandomPot() {
 
 // Arc animation to pot with smooth landing and rotation
 function arcToPot(spoonEl, potKey) {
-  const potContainer = document.getElementById('pot' + potKey); // .spoons-in-pot container
+  const potContainer = document.getElementById('pot' + potKey); // .spoons-in-pot
   const potRect = potContainer.getBoundingClientRect();
 
-  // Get spoon starting position relative to viewport
+  // Spoon starting position relative to viewport
   const startRect = spoonEl.getBoundingClientRect();
   const startX = startRect.left;
   const startY = startRect.top;
 
   // Destination inside pot container
-  const destX = potContainer.children.length * 55; // side-by-side spacing
-  const destY = 0; // bottom of container
+  const destX = potRect.left + potContainer.children.length * 55; // horizontal offset for side-by-side
+  const destY = potRect.top; // top of pot container in viewport
 
-  // Move spoon to absolute positioning in body for animation
+  // Move spoon to body for absolute positioning
   spoonEl.style.position = 'absolute';
   spoonEl.style.zIndex = 1000;
   document.body.appendChild(spoonEl);
 
   const finalRotation = (Math.random() * 20 - 10); // -10° to +10°
-  const midX = (startX + potRect.left + destX)/2 + (Math.random()*30 - 15);
-  const midY = (startY + potRect.top + destY)/2 - 150 - Math.random()*30;
+  const midX = (startX + destX)/2 + (Math.random()*30 - 15);
+  const midY = Math.min(startY, destY) - 150 - Math.random()*30;
 
   let t = 0;
   const duration = 60;
@@ -199,9 +199,9 @@ function arcToPot(spoonEl, potKey) {
     t++;
     const progress = t/duration;
 
-    // Quadratic Bezier
-    const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*(potRect.left + destX);
-    const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*(potRect.top + destY);
+    // Quadratic Bezier interpolation
+    const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
+    const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
     const rotation = finalRotation * progress;
 
     spoonEl.style.left = x + 'px';
@@ -210,10 +210,10 @@ function arcToPot(spoonEl, potKey) {
 
     if (t < duration) requestAnimationFrame(animateArc);
     else {
-      // Append to pot container and adjust relative position
+      // Append to pot container and position relative inside
       spoonEl.style.position = 'relative';
-      spoonEl.style.left = destX + 'px';
-      spoonEl.style.top = destY + 'px';
+      spoonEl.style.left = potContainer.children.length * 55 + 'px';
+      spoonEl.style.top = '0px';
       spoonEl.style.transform = `rotate(${finalRotation}deg)`;
       potContainer.appendChild(spoonEl);
     }
@@ -252,6 +252,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 </body>
 </html>
+
 
 
 
