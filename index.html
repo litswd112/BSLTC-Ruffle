@@ -19,7 +19,7 @@
   #character-container {
     position: relative;
     width: 300px;
-    height: 400px; /* for spinning wheel */
+    height: 400px;
     margin: 40px auto 20px auto;
   }
 
@@ -45,27 +45,22 @@
   }
 
   .pot {
-    width: 100px;
+    width: 120px;
     height: 120px;
-    background-color: #c1440e;
-    border-radius: 10px;
-    color: white;
-    line-height: 20px;
-    font-weight: bold;
-    font-size: 24px;
     position: relative;
-    padding-top: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  }
+
+  .pot img {
+    width: 100%;
+    height: auto;
   }
 
   .spoons-in-pot {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
     display: flex;
-    flex-direction: column;
     gap: 5px;
-    margin-top: 5px;
-    flex-wrap: wrap;
   }
 
   #drawButton {
@@ -86,19 +81,19 @@
 
 <div class="pots">
   <div class="pot" id="A">
-    A
+    <img src="pot_A.png" alt="Pot A">
     <div class="spoons-in-pot" id="potA"></div>
   </div>
   <div class="pot" id="B">
-    B
+    <img src="pot_B.png" alt="Pot B">
     <div class="spoons-in-pot" id="potB"></div>
   </div>
   <div class="pot" id="C">
-    C
+    <img src="pot_C.png" alt="Pot C">
     <div class="spoons-in-pot" id="potC"></div>
   </div>
   <div class="pot" id="D">
-    D
+    <img src="pot_D.png" alt="Pot D">
     <div class="spoons-in-pot" id="potD"></div>
   </div>
 </div>
@@ -122,7 +117,7 @@ let angleOffset = 0;
 // Preload spoon images
 for (let i = 1; i <= totalSpoons; i++) {
   const spoonEl = document.createElement('img');
-  spoonEl.src = `spoon_${i}.png`; // Use your individual spoon images
+  spoonEl.src = `spoon_${i}.png`; // Your spoon images
   spoonEl.className = 'spoon';
   container.appendChild(spoonEl);
   spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
@@ -133,7 +128,7 @@ function animate() {
   angleOffset += 0.02;
   spoons.forEach(spoon => {
     const centerX = 150;
-    const centerY = 120; // raised above character
+    const centerY = 120; 
     const x = centerX + radius * Math.cos(spoon.angle + angleOffset) - 25;
     const y = centerY + radius * Math.sin(spoon.angle + angleOffset) - 25;
     spoon.el.style.left = x + 'px';
@@ -143,7 +138,7 @@ function animate() {
 }
 animate();
 
-// Function to determine which pot the spoon goes to
+// Map spoon number to pot
 function getPotKey(spoonNumber) {
   if (spoonNumber >=1 && spoonNumber <=4) return 'A';
   if (spoonNumber >=5 && spoonNumber <=8) return 'B';
@@ -151,34 +146,36 @@ function getPotKey(spoonNumber) {
   if (spoonNumber >=13 && spoonNumber <=16) return 'D';
 }
 
-// Animate spoon falling into the pot
-function fallToPot(spoonEl, potKey) {
+// Animate spoon sliding to pot
+function slideToPot(spoonEl, potKey) {
   const pot = potElements[potKey];
+  const potRect = pot.getBoundingClientRect();
   const startX = parseFloat(spoonEl.style.left);
   const startY = parseFloat(spoonEl.style.top);
 
-  const potRect = pot.getBoundingClientRect();
-  const destX = potRect.left + potRect.width/2 - 25;
-  const destY = potRect.top + 20;
+  // Destination x: next slot in pot
+  const destX = pot.children.length * 55; // 50px spoon + 5px gap
+  const destY = 0;
 
   let t = 0;
   const duration = 60;
-  function animateFall() {
+  function animateSlide() {
     t++;
     const progress = t/duration;
     const x = startX + (destX - startX) * progress;
     const y = startY + (destY - startY) * progress;
     spoonEl.style.left = x + 'px';
     spoonEl.style.top = y + 'px';
-    if (t < duration) requestAnimationFrame(animateFall);
+
+    if (t < duration) requestAnimationFrame(animateSlide);
     else {
       spoonEl.style.position = 'relative';
-      spoonEl.style.left = '0px';
-      spoonEl.style.top = '0px';
-      pot.appendChild(spoonEl); // add to correct pot
+      spoonEl.style.left = destX + 'px';
+      spoonEl.style.top = destY + 'px';
+      pot.appendChild(spoonEl);
     }
   }
-  animateFall();
+  animateSlide();
 }
 
 // Draw button
@@ -188,7 +185,7 @@ document.getElementById('drawButton').addEventListener('click', () => {
   const index = Math.floor(Math.random() * spoons.length);
   const spoon = spoons.splice(index, 1)[0];
   const potKey = getPotKey(spoon.number);
-  fallToPot(spoon.el, potKey);
+  slideToPot(spoon.el, potKey);
 });
 </script>
 
