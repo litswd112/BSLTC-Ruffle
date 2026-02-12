@@ -65,6 +65,14 @@
     gap: 5px;
   }
 
+  .pot-target {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+  }
+
   #controls {
     margin-top: 20px;
   }
@@ -95,18 +103,22 @@
   <div class="pot" id="A">
     <img src="pot_A.png" alt="Pot A">
     <div class="spoons-in-pot" id="potA"></div>
+    <div class="pot-target" id="potTargetA"></div>
   </div>
   <div class="pot" id="B">
     <img src="pot_B.png" alt="Pot B">
     <div class="spoons-in-pot" id="potB"></div>
+    <div class="pot-target" id="potTargetB"></div>
   </div>
   <div class="pot" id="C">
     <img src="pot_C.png" alt="Pot C">
     <div class="spoons-in-pot" id="potC"></div>
+    <div class="pot-target" id="potTargetC"></div>
   </div>
   <div class="pot" id="D">
     <img src="pot_D.png" alt="Pot D">
     <div class="spoons-in-pot" id="potD"></div>
+    <div class="pot-target" id="potTargetD"></div>
   </div>
 </div>
 
@@ -121,7 +133,6 @@ const totalSpoons = 16;
 let angleOffset = 0;
 let spoons = [];
 
-// Max 4 per pot
 const potCounts = { A:0, B:0, C:0, D:0 };
 const potMax = 4;
 const potElements = {
@@ -129,6 +140,13 @@ const potElements = {
   B: document.getElementById('potB'),
   C: document.getElementById('potC'),
   D: document.getElementById('potD')
+};
+
+const potTargets = {
+  A: document.getElementById('potTargetA'),
+  B: document.getElementById('potTargetB'),
+  C: document.getElementById('potTargetC'),
+  D: document.getElementById('potTargetD')
 };
 
 // Create spoon elements
@@ -140,7 +158,6 @@ function createSpoons(){
     spoonEl.className='spoon';
     spoonEl.style.position='absolute';
     container.appendChild(spoonEl);
-
     spoons.push({el:spoonEl, number:i, angle:(i/totalSpoons)*2*Math.PI, flying:false});
   }
 }
@@ -154,15 +171,11 @@ function animate(){
 
   spoons.forEach(spoon=>{
     if(spoon.flying) return;
-
     const baseX = centerX + 100*Math.cos(spoon.angle + angleOffset);
     const baseY = centerY + 100*Math.sin(spoon.angle + angleOffset);
-
     const jitterX = Math.sin(angleOffset*3 + spoon.number)*10;
     const jitterY = Math.cos(angleOffset*2 + spoon.number)*8;
-
     const rotation = angleOffset*180 + spoon.number*20;
-
     spoon.el.style.left = (baseX + jitterX - 25) + 'px';
     spoon.el.style.top = (baseY + jitterY - 25) + 'px';
     spoon.el.style.transform = `rotate(${rotation}deg)`;
@@ -172,7 +185,7 @@ function animate(){
 }
 animate();
 
-// Random pot with max
+// Random pot
 function getRandomPot(){
   const available = Object.keys(potCounts).filter(p=>potCounts[p]<potMax);
   if(!available.length) return null;
@@ -181,19 +194,21 @@ function getRandomPot(){
   return choice;
 }
 
-// Animate spoon into pot
+// Fly spoon to hidden pot target
 function flyToPot(spoon, potKey){
   spoon.flying = true;
 
-  const potContainer = potElements[potKey];
-  const potRect = potContainer.getBoundingClientRect();
+  const target = potTargets[potKey];
+  const targetRect = target.getBoundingClientRect();
+  const spoonWidth = spoon.el.offsetWidth;
+  const spoonHeight = spoon.el.offsetHeight;
 
   const startRect = spoon.el.getBoundingClientRect();
   const startX = startRect.left + startRect.width/2 + window.scrollX;
   const startY = startRect.top + startRect.height/2 + window.scrollY;
 
-  const destX = potRect.left + potRect.width/2 + window.scrollX;
-  const destY = potRect.top + potRect.height/2 + window.scrollY;
+  const destX = targetRect.left + window.scrollX;
+  const destY = targetRect.top + window.scrollY;
 
   spoon.el.style.position = 'absolute';
   spoon.el.style.zIndex = 1000;
@@ -208,25 +223,23 @@ function flyToPot(spoon, potKey){
   function animateArc(){
     t++;
     const progress = t/duration;
-
     const x = (1-progress)*(1-progress)*startX + 2*(1-progress)*progress*midX + progress*progress*destX;
     const y = (1-progress)*(1-progress)*startY + 2*(1-progress)*progress*midY + progress*progress*destY;
 
-    spoon.el.style.left = (x - 25) + 'px';
-    spoon.el.style.top = (y - 25) + 'px';
+    spoon.el.style.left = (x - spoonWidth/2) + 'px';
+    spoon.el.style.top = (y - spoonHeight/2) + 'px';
     spoon.el.style.transform = 'rotate(0deg)';
 
     if(t<duration){
       requestAnimationFrame(animateArc);
     }else{
+      const potContainer = potElements[potKey];
       const index = potContainer.children.length;
-      const rotation = -10 + index*7; // slight fan
-      spoon.el.style.width = '50px';
-      spoon.el.style.height = '50px';
-      spoon.el.style.transform = `rotate(${rotation}deg)`;
+      const rotation = -10 + index*7; // fan slightly
       spoon.el.style.position = 'relative';
       spoon.el.style.left = '0px';
       spoon.el.style.top = '0px';
+      spoon.el.style.transform = `rotate(${rotation}deg)`;
       potContainer.appendChild(spoon.el);
     }
   }
@@ -249,7 +262,6 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
   });
   for(let key in potCounts) potCounts[key]=0;
 
-  // Remove existing spoon elements
   spoons.forEach(spoon=>{
     if(spoon.el.parentElement) spoon.el.remove();
   });
