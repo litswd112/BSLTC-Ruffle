@@ -3,33 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Juggling Spoon Draw</title>
+<title>Spinning Spoon Juggle</title>
 <style>
   body {
     font-family: sans-serif;
     text-align: center;
     background-color: #fdf6e3;
+    overflow: hidden;
   }
   #character-container {
     position: relative;
-    width: 200px;
+    width: 300px;
     height: 300px;
     margin: 20px auto;
   }
   #character {
     width: 100%;
-    height: auto;
     position: absolute;
     bottom: 0;
     left: 0;
   }
   .spoon {
     position: absolute;
-    font-weight: bold;
-    color: yellow;
-    font-size: 20px;
-    top: 50px;
-    left: 80px;
+    width: 40px;
+    height: 40px;
+    transform-origin: 50% 50%;
   }
   .pots {
     display: flex;
@@ -46,22 +44,21 @@
     line-height: 80px;
     font-weight: bold;
     font-size: 20px;
-    cursor: pointer;
     position: relative;
   }
-  #drawn {
+  #drawButton {
     margin-top: 20px;
-    font-size: 24px;
-    color: #c1440e;
+    padding: 10px 20px;
+    font-size: 18px;
   }
 </style>
 </head>
 <body>
 
-<h1>Terra Rossa Spoon Juggling</h1>
+<h1>Spinning Spoon Juggle</h1>
 
 <div id="character-container">
-  <img id="character" src="uploaded_cartoon.png" alt="Cartoon Character">
+  <img id="character" src="uploaded_cartoon.png" alt="Character">
 </div>
 
 <div class="pots">
@@ -71,62 +68,78 @@
   <div class="pot" id="D">D</div>
 </div>
 
-<button onclick="drawSpoon()">Draw a Spoon</button>
-
-<div id="drawn">Drawn Spoon: None</div>
+<button id="drawButton">Draw a Spoon</button>
 
 <script>
-const pots = {
-  A: [1,2,3,4],
-  B: [5,6,7,8],
-  C: [9,10,11,12],
-  D: [13,14,15,16]
+const potElements = {
+  A: document.getElementById('A'),
+  B: document.getElementById('B'),
+  C: document.getElementById('C'),
+  D: document.getElementById('D')
 };
 
-function drawSpoon() {
-  const potKeys = Object.keys(pots);
-  const randomPot = potKeys[Math.floor(Math.random() * potKeys.length)];
+const container = document.getElementById('character-container');
+const spoons = [];
+const totalSpoons = 16;
+const radius = 100;
+let angleOffset = 0;
 
-  if (pots[randomPot].length === 0) {
-    drawSpoon(); // retry if empty
-    return;
-  }
-
-  const index = Math.floor(Math.random() * pots[randomPot].length);
-  const spoon = pots[randomPot][index];
-  pots[randomPot].splice(index, 1);
-
-  document.getElementById('drawn').innerText = `Drawn Spoon: ${spoon} from Pot ${randomPot}`;
-
-  animateJuggle(spoon);
+// Create spoon images (you can replace with actual spoon images)
+for (let i = 1; i <= totalSpoons; i++) {
+  const spoon = document.createElement('div');
+  spoon.className = 'spoon';
+  spoon.innerText = i; // Replace this with an <img src="spoonX.png"> if you have images
+  container.appendChild(spoon);
+  spoons.push({el: spoon, number: i, angle: (i/totalSpoons)*2*Math.PI});
 }
 
-function animateJuggle(spoon) {
-  const container = document.getElementById('character-container');
-  const spoonEl = document.createElement('div');
-  spoonEl.className = 'spoon';
-  spoonEl.innerText = spoon;
-  container.appendChild(spoonEl);
+// Animate spinning
+function animate() {
+  angleOffset += 0.02;
+  spoons.forEach(spoon => {
+    const x = 150 + radius * Math.cos(spoon.angle + angleOffset) - 20;
+    const y = 150 + radius * Math.sin(spoon.angle + angleOffset) - 20;
+    spoon.el.style.left = x + 'px';
+    spoon.el.style.top = y + 'px';
+  });
+  requestAnimationFrame(animate);
+}
+animate();
 
-  let angle = 0;
-  const radius = 50;
-  const centerX = 100;
-  const centerY = 80;
+// Draw a spoon and animate it falling into a random pot
+document.getElementById('drawButton').addEventListener('click', () => {
+  if (spoons.length === 0) return;
 
-  const interval = setInterval(() => {
-    angle += 0.1;
-    const x = centerX + radius * Math.cos(angle) - 10;
-    const y = centerY - radius * Math.sin(angle);
+  const index = Math.floor(Math.random() * spoons.length);
+  const spoon = spoons.splice(index, 1)[0];
+
+  const potKeys = Object.keys(potElements);
+  const potKey = potKeys[Math.floor(Math.random() * potKeys.length)];
+  const pot = potElements[potKey];
+  const rect = pot.getBoundingClientRect();
+
+  const spoonEl = spoon.el;
+  const startX = parseFloat(spoonEl.style.left);
+  const startY = parseFloat(spoonEl.style.top);
+
+  let t = 0;
+  const duration = 60;
+  function fall() {
+    t++;
+    const progress = t/duration;
+    const x = startX + (rect.left + 40 - startX) * progress;
+    const y = startY + (rect.top - startY) * progress;
     spoonEl.style.left = x + 'px';
     spoonEl.style.top = y + 'px';
-
-    // Stop after 4 full rotations
-    if (angle >= Math.PI * 8) {
-      clearInterval(interval);
-      container.removeChild(spoonEl);
+    if (t < duration) requestAnimationFrame(fall);
+    else {
+      spoonEl.style.left = x + 'px';
+      spoonEl.style.top = y + 'px';
+      pot.appendChild(spoonEl); // Stick the spoon into the pot
     }
-  }, 30);
-}
+  }
+  fall();
+});
 </script>
 
 </body>
