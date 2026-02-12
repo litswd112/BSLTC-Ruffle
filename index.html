@@ -67,6 +67,15 @@
     gap: 5px;
   }
 
+  /* Hidden target for spoon landing */
+  .target {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    bottom: 10px;
+    left: 10px;
+  }
+
   #controls {
     margin-top: 20px;
   }
@@ -97,18 +106,22 @@
   <div class="pot" id="A">
     <img src="pot_A.png" alt="Pot A">
     <div class="spoons-in-pot" id="potA"></div>
+    <div class="target" id="targetA"></div>
   </div>
   <div class="pot" id="B">
     <img src="pot_B.png" alt="Pot B">
     <div class="spoons-in-pot" id="potB"></div>
+    <div class="target" id="targetB"></div>
   </div>
   <div class="pot" id="C">
     <img src="pot_C.png" alt="Pot C">
     <div class="spoons-in-pot" id="potC"></div>
+    <div class="target" id="targetC"></div>
   </div>
   <div class="pot" id="D">
     <img src="pot_D.png" alt="Pot D">
     <div class="spoons-in-pot" id="potD"></div>
+    <div class="target" id="targetD"></div>
   </div>
 </div>
 
@@ -124,7 +137,6 @@ const radius = 100;
 let angleOffset = 0;
 let spoons = [];
 
-// Track pots
 const potCounts = { A:0, B:0, C:0, D:0 };
 const potMax = 4;
 const potElements = {
@@ -179,37 +191,34 @@ function getRandomPot() {
   return choice;
 }
 
-// Animate spoon into pot using absolute coordinates
+// Animate spoon into pot using hidden target
 function arcToPot(spoonEl, potKey) {
-  const potContainer = document.getElementById('pot'+potKey);
-  const potRect = potContainer.getBoundingClientRect();
-  const startRect = spoonEl.getBoundingClientRect();
+  const target = document.getElementById('target'+potKey);
+  const targetRect = target.getBoundingClientRect();
 
-  // Start: center of spoon
+  const startRect = spoonEl.getBoundingClientRect();
   const startX = startRect.left + startRect.width/2 + window.scrollX;
   const startY = startRect.top + startRect.height/2 + window.scrollY;
 
-  // End: inside pot container, bottom-left for stacking
-  const destX = potRect.left + potContainer.children.length * 55 + spoonEl.width/2 + window.scrollX;
-  const destY = potRect.top + potRect.height/2 + window.scrollY;
+  const destX = targetRect.left + window.scrollX;
+  const destY = targetRect.top + window.scrollY;
 
-  // Move spoon to body for correct coordinate animation
   spoonEl.style.position = 'absolute';
   spoonEl.style.zIndex = 1000;
   document.body.appendChild(spoonEl);
 
   const finalRotation = (Math.random()*20 - 10);
-  const midX = (startX + destX)/2 + (Math.random()*20-10);
-  const midY = (startY + destY)/2 - 100; // arc lift
+  const midX = (startX + destX)/2 + (Math.random()*20 - 10);
+  const midY = (startY + destY)/2 - 100;
   let t=0;
-  const duration=60;
+  const duration = 60;
 
-  function animateArc(){
+  function animateArc() {
     t++;
     const progress = t/duration;
     const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*midX + Math.pow(progress,2)*destX;
     const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*midY + Math.pow(progress,2)*destY;
-    const rotation = finalRotation*progress;
+    const rotation = finalRotation * progress;
 
     spoonEl.style.left = (x - spoonEl.width/2) + 'px';
     spoonEl.style.top = (y - spoonEl.height/2) + 'px';
@@ -217,7 +226,7 @@ function arcToPot(spoonEl, potKey) {
 
     if(t < duration) requestAnimationFrame(animateArc);
     else {
-      // Append to pot container for stacking
+      const potContainer = document.getElementById('pot'+potKey);
       spoonEl.style.position = 'relative';
       spoonEl.style.left = potContainer.children.length * 55 + 'px';
       spoonEl.style.top = '0px';
@@ -255,3 +264,4 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
 
 </body>
 </html>
+
