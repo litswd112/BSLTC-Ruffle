@@ -25,8 +25,8 @@
   }
   .spoon {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     transform-origin: 50% 50%;
   }
   .pots {
@@ -84,21 +84,21 @@ const totalSpoons = 16;
 const radius = 100;
 let angleOffset = 0;
 
-// Create spoon images (you can replace with actual spoon images)
+// Preload individual spoon images (spoon_1.png ... spoon_16.png)
 for (let i = 1; i <= totalSpoons; i++) {
-  const spoon = document.createElement('div');
-  spoon.className = 'spoon';
-  spoon.innerText = i; // Replace this with an <img src="spoonX.png"> if you have images
-  container.appendChild(spoon);
-  spoons.push({el: spoon, number: i, angle: (i/totalSpoons)*2*Math.PI});
+  const spoonEl = document.createElement('img');
+  spoonEl.src = `spoon_${i}.png`; // Will use your actual images
+  spoonEl.className = 'spoon';
+  container.appendChild(spoonEl);
+  spoons.push({el: spoonEl, number: i, angle: (i/totalSpoons)*2*Math.PI});
 }
 
 // Animate spinning
 function animate() {
   angleOffset += 0.02;
   spoons.forEach(spoon => {
-    const x = 150 + radius * Math.cos(spoon.angle + angleOffset) - 20;
-    const y = 150 + radius * Math.sin(spoon.angle + angleOffset) - 20;
+    const x = 150 + radius * Math.cos(spoon.angle + angleOffset) - 25;
+    const y = 150 + radius * Math.sin(spoon.angle + angleOffset) - 25;
     spoon.el.style.left = x + 'px';
     spoon.el.style.top = y + 'px';
   });
@@ -106,7 +106,7 @@ function animate() {
 }
 animate();
 
-// Draw a spoon and animate it falling into a random pot
+// Draw a spoon and animate falling into a random pot
 document.getElementById('drawButton').addEventListener('click', () => {
   if (spoons.length === 0) return;
 
@@ -135,7 +135,7 @@ document.getElementById('drawButton').addEventListener('click', () => {
     else {
       spoonEl.style.left = x + 'px';
       spoonEl.style.top = y + 'px';
-      pot.appendChild(spoonEl); // Stick the spoon into the pot
+      pot.appendChild(spoonEl); // Place spoon in pot
     }
   }
   fall();
@@ -144,3 +144,4 @@ document.getElementById('drawButton').addEventListener('click', () => {
 
 </body>
 </html>
+
