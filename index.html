@@ -205,29 +205,25 @@ function flyToPot(spoon, potKey){
   spoon.flying = true;
 
   const potContainer = potElements[potKey];
-
-  // Get destination relative to page
   const potRect = potContainer.getBoundingClientRect();
-  const pageX = potRect.left + window.scrollX;
-  const pageY = potRect.top + window.scrollY;
 
-  const offsetIndex = potContainer.children.length;
+  const spoonWidth = spoon.el.offsetWidth;
 
-  const destX = pageX + offsetIndex*45 + 20;
-  const destY = pageY + 20;
-
+  // Start position
   const startRect = spoon.el.getBoundingClientRect();
-  const startX = startRect.left + window.scrollX;
-  const startY = startRect.top + window.scrollY;
+  const startX = startRect.left + window.scrollX + spoonWidth/2;
+  const startY = startRect.top + window.scrollY + spoonWidth/2;
+
+  // EXACT CENTER of pot
+  const destX = potRect.left + window.scrollX + potRect.width/2;
+  const destY = potRect.top + window.scrollY + potRect.height/2 + 15;
 
   spoon.el.style.position='absolute';
   spoon.el.style.zIndex=1000;
   document.body.appendChild(spoon.el);
 
-  const midX = (startX+destX)/2;
-  const midY = (startY+destY)/2 - 120;
-
-  const finalRotation = (Math.random()*20 - 10);
+  const midX = (startX + destX)/2;
+  const midY = (startY + destY)/2 - 120;
 
   let t=0;
   const duration=60;
@@ -244,23 +240,31 @@ function flyToPot(spoon, potKey){
             + 2*(1-progress)*progress*midY
             + progress*progress*destY;
 
-    spoon.el.style.left = x + 'px';
-    spoon.el.style.top = y + 'px';
-    spoon.el.style.transform = `rotate(${finalRotation*progress}deg)`;
+    spoon.el.style.left = (x - spoonWidth/2) + 'px';
+    spoon.el.style.top = (y - spoonWidth/2) + 'px';
 
     if(t<duration){
       requestAnimationFrame(animateArc);
     }else{
+
+      // Rotation stacking (max 4 spoons)
+      const index = potContainer.children.length;
+      const rotationStep = 10; // 10 degrees difference
+      const baseRotation = -15; // starting angle
+      const finalRotation = baseRotation + (index * rotationStep);
+
       spoon.el.style.position='relative';
       spoon.el.style.left='0px';
       spoon.el.style.top='0px';
       spoon.el.style.transform=`rotate(${finalRotation}deg)`;
+
       potContainer.appendChild(spoon.el);
     }
   }
 
   animateArc();
 }
+
 
 document.getElementById('drawButton').addEventListener('click', ()=>{
   if(!spoons.length) return;
@@ -292,6 +296,7 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
 
 </body>
 </html>
+
 
 
 
