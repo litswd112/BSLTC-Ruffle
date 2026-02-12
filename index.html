@@ -124,6 +124,7 @@ const radius = 100;
 let angleOffset = 0;
 let spoons = [];
 
+// Track pots
 const potCounts = { A:0, B:0, C:0, D:0 };
 const potMax = 4;
 const potElements = {
@@ -134,9 +135,9 @@ const potElements = {
 };
 
 // Create spinning spoons
-function createSpoons(){
-  spoons=[];
-  for(let i=1;i<=totalSpoons;i++){
+function createSpoons() {
+  spoons = [];
+  for(let i=1; i<=totalSpoons; i++){
     const spoonEl = document.createElement('img');
     spoonEl.src = `spoon_${i}.png`;
     spoonEl.className = 'spoon';
@@ -146,16 +147,16 @@ function createSpoons(){
 }
 createSpoons();
 
-// Spinning animation
-function animate(){
+// Animate spinning above character
+function animate() {
   angleOffset += 0.02;
   const containerRect = container.getBoundingClientRect();
   const centerX = containerRect.width/2;
   const centerY = containerRect.height/2 - 50;
 
   spoons.forEach(spoon=>{
-    const baseX = centerX + radius*Math.cos(spoon.angle+angleOffset);
-    const baseY = centerY + radius*Math.sin(spoon.angle+angleOffset);
+    const baseX = centerX + radius*Math.cos(spoon.angle + angleOffset);
+    const baseY = centerY + radius*Math.sin(spoon.angle + angleOffset);
     const jitterX = Math.sin(angleOffset*3 + spoon.number)*10;
     const jitterY = Math.cos(angleOffset*2 + spoon.number)*8;
     const rotation = angleOffset*180 + spoon.number*20;
@@ -170,34 +171,34 @@ function animate(){
 animate();
 
 // Random pot selection
-function getRandomPot(){
-  const available = Object.keys(potCounts).filter(p => potCounts[p] < potMax);
+function getRandomPot() {
+  const available = Object.keys(potCounts).filter(p=>potCounts[p]<potMax);
   if(!available.length) return null;
   const choice = available[Math.floor(Math.random()*available.length)];
   potCounts[choice]++;
   return choice;
 }
 
-// Animate spoon to pot accurately
-function arcToPot(spoonEl, potKey){
+// Animate spoon into pot using absolute coordinates
+function arcToPot(spoonEl, potKey) {
   const potContainer = document.getElementById('pot'+potKey);
   const potRect = potContainer.getBoundingClientRect();
   const startRect = spoonEl.getBoundingClientRect();
 
   // Start: center of spoon
-  const startX = startRect.left + startRect.width/2;
-  const startY = startRect.top + startRect.height/2;
+  const startX = startRect.left + startRect.width/2 + window.scrollX;
+  const startY = startRect.top + startRect.height/2 + window.scrollY;
 
-  // End: bottom-left of pot container
-  const destX = potRect.left + potContainer.children.length * 55 + spoonEl.width/2;
-  const destY = potRect.top + potRect.height/2;
+  // End: inside pot container, bottom-left for stacking
+  const destX = potRect.left + potContainer.children.length * 55 + spoonEl.width/2 + window.scrollX;
+  const destY = potRect.top + potRect.height/2 + window.scrollY;
 
-  // Animate in body coordinates
+  // Move spoon to body for correct coordinate animation
   spoonEl.style.position = 'absolute';
   spoonEl.style.zIndex = 1000;
   document.body.appendChild(spoonEl);
 
-  const finalRotation = (Math.random()*20-10);
+  const finalRotation = (Math.random()*20 - 10);
   const midX = (startX + destX)/2 + (Math.random()*20-10);
   const midY = (startY + destY)/2 - 100; // arc lift
   let t=0;
@@ -214,10 +215,9 @@ function arcToPot(spoonEl, potKey){
     spoonEl.style.top = (y - spoonEl.height/2) + 'px';
     spoonEl.style.transform = `rotate(${rotation}deg)`;
 
-    if(t < duration){
-      requestAnimationFrame(animateArc);
-    } else {
-      // Append to pot container
+    if(t < duration) requestAnimationFrame(animateArc);
+    else {
+      // Append to pot container for stacking
       spoonEl.style.position = 'relative';
       spoonEl.style.left = potContainer.children.length * 55 + 'px';
       spoonEl.style.top = '0px';
@@ -235,7 +235,7 @@ document.getElementById('drawButton').addEventListener('click', ()=>{
   const index = Math.floor(Math.random()*spoons.length);
   const spoon = spoons.splice(index,1)[0];
   const potKey = getRandomPot();
-  if(potKey) arcToPot(spoon.el,potKey);
+  if(potKey) arcToPot(spoon.el, potKey);
 });
 
 // Reset
