@@ -204,19 +204,18 @@ function flyToPot(spoon, potKey){
 
   spoon.flying = true;
 
-  const potContainer = potElements[potKey];
-  const potRect = potContainer.getBoundingClientRect();
+  const pot = document.getElementById(potKey);
+  const potRect = pot.getBoundingClientRect();
 
   const spoonWidth = spoon.el.offsetWidth;
 
-  // Start position
   const startRect = spoon.el.getBoundingClientRect();
   const startX = startRect.left + window.scrollX + spoonWidth/2;
   const startY = startRect.top + window.scrollY + spoonWidth/2;
 
-  // EXACT CENTER of pot
+  // Land visually inside pot image
   const destX = potRect.left + window.scrollX + potRect.width/2;
-  const destY = potRect.top + window.scrollY + potRect.height/2 + 15;
+  const destY = potRect.top + window.scrollY + potRect.height - 40;
 
   spoon.el.style.position='absolute';
   spoon.el.style.zIndex=1000;
@@ -247,23 +246,17 @@ function flyToPot(spoon, potKey){
       requestAnimationFrame(animateArc);
     }else{
 
-      // Rotation stacking (max 4 spoons)
-      const index = potContainer.children.length;
-      const rotationStep = 10; // 10 degrees difference
-      const baseRotation = -15; // starting angle
-      const finalRotation = baseRotation + (index * rotationStep);
+      // Rotate slightly so they don't overlap perfectly
+      const index = potCounts[potKey] - 1;
+      const rotation = -15 + (index * 10);
 
-      spoon.el.style.position='relative';
-      spoon.el.style.left='0px';
-      spoon.el.style.top='0px';
-      spoon.el.style.transform=`rotate(${finalRotation}deg)`;
-
-      potContainer.appendChild(spoon.el);
+      spoon.el.style.transform = `rotate(${rotation}deg)`;
     }
   }
 
   animateArc();
 }
+
 
 
 document.getElementById('drawButton').addEventListener('click', ()=>{
@@ -296,6 +289,7 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
 
 </body>
 </html>
+
 
 
 
