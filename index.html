@@ -194,48 +194,48 @@ function getRandomPot(){
 }
 
 // Animate spoon into pot
-function arcToPot(spoonEl, potKey){
+function arcToPot(spoonEl, potKey) {
   const potContainer = document.getElementById('pot'+potKey);
   const potRect = potContainer.getBoundingClientRect();
-
-  // Get spoon current position in viewport
   const startRect = spoonEl.getBoundingClientRect();
+
+  // Start position: center of spoon
   const startX = startRect.left + startRect.width/2;
   const startY = startRect.top + startRect.height/2;
 
-  // Destination: center of pot container
-  const destX = potRect.left + potRect.width/2;
+  // End position: bottom-left corner of pot container
+  const destX = potRect.left + potContainer.children.length * 55 + spoonEl.width/2;
   const destY = potRect.top + potRect.height/2;
 
-  // Move spoon to body for animation
+  // Move spoon to body
   spoonEl.style.position = 'absolute';
   spoonEl.style.zIndex = 1000;
   document.body.appendChild(spoonEl);
 
-  // Optional juggle/bounce effect: small vertical offset
-  const bounceY = startY - 30 - Math.random()*20;
+  const finalRotation = (Math.random() * 20 - 10); // small rotation
+  const midX = (startX + destX) / 2 + (Math.random() * 20 - 10); // mid for arc
+  const midY = (startY + destY) / 2 - 100; // lift for arc
 
-  const finalRotation = (Math.random()*20-10);
   let t = 0;
   const duration = 60;
 
-  function animateArc(){
+  function animateArc() {
     t++;
-    const progress = t/duration;
+    const progress = t / duration;
 
-    // Quadratic Bezier: start -> mid (bounce) -> dest
-    const x = Math.pow(1-progress,2)*startX + 2*(1-progress)*progress*((startX+destX)/2) + Math.pow(progress,2)*destX;
-    const y = Math.pow(1-progress,2)*startY + 2*(1-progress)*progress*bounceY + Math.pow(progress,2)*destY;
+    // Quadratic Bezier
+    const x = Math.pow(1 - progress, 2) * startX + 2 * (1 - progress) * progress * midX + Math.pow(progress, 2) * destX;
+    const y = Math.pow(1 - progress, 2) * startY + 2 * (1 - progress) * progress * midY + Math.pow(progress, 2) * destY;
     const rotation = finalRotation * progress;
 
     spoonEl.style.left = (x - spoonEl.width/2) + 'px';
     spoonEl.style.top = (y - spoonEl.height/2) + 'px';
     spoonEl.style.transform = `rotate(${rotation}deg)`;
 
-    if(t < duration){
+    if(t < duration) {
       requestAnimationFrame(animateArc);
     } else {
-      // Place in pot container for stacking
+      // Append to pot container
       spoonEl.style.position = 'relative';
       spoonEl.style.left = potContainer.children.length * 55 + 'px';
       spoonEl.style.top = '0px';
@@ -243,7 +243,6 @@ function arcToPot(spoonEl, potKey){
       potContainer.appendChild(spoonEl);
     }
   }
-
   animateArc();
 }
 
@@ -273,5 +272,6 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
 
 </body>
 </html>
+
 
 
