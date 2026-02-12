@@ -173,15 +173,19 @@ function getRandomPot() {
 function arcToPot(spoonEl, potKey) {
   const pot = document.getElementById('pot' + potKey);
   const potRect = pot.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
 
-  // Current spoon position relative to container
-  const startX = spoonEl.getBoundingClientRect().left - containerRect.left;
-  const startY = spoonEl.getBoundingClientRect().top - containerRect.top;
+  // Spoon starting position relative to viewport
+  const startRect = spoonEl.getBoundingClientRect();
+  const startX = startRect.left;
+  const startY = startRect.top;
 
   // Destination inside pot
-  const destX = (potRect.left - containerRect.left) + (pot.children.length * 55); // side-by-side inside pot
-  const destY = (potRect.top - containerRect.top) + (pot.offsetHeight - spoonEl.offsetHeight - 10); // bottom padding
+  const destX = potRect.left + pot.children.length * 55; // horizontal offset for side-by-side
+  const destY = potRect.top + pot.offsetHeight - spoonEl.offsetHeight - 10; // bottom padding
+
+  // Move spoon to absolute positioning in body
+  spoonEl.style.position = 'absolute';
+  document.body.appendChild(spoonEl);
 
   const finalRotation = (Math.random() * 20 - 10); // -10° to +10°
   const midX = (startX + destX)/2 + (Math.random()*30 - 15); 
@@ -204,6 +208,7 @@ function arcToPot(spoonEl, potKey) {
 
     if (t < duration) requestAnimationFrame(animateArc);
     else {
+      // Place spoon inside pot
       spoonEl.style.position = 'relative';
       spoonEl.style.left = pot.children.length * 55 + 'px';
       spoonEl.style.top = '0px';
@@ -213,6 +218,7 @@ function arcToPot(spoonEl, potKey) {
   }
   animateArc();
 }
+
 
 // Draw a spoon
 document.getElementById('drawButton').addEventListener('click', () => {
@@ -243,4 +249,5 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 </body>
 </html>
+
 
