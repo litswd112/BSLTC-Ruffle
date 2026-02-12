@@ -198,23 +198,26 @@ function getRandomPot(){
 function flyToPot(spoon, potKey){
   spoon.flying = true;
 
-  const target = potTargets[potKey];
-  const targetRect = target.getBoundingClientRect();
+  const potImg = document.getElementById(''+potKey); // get the pot div
+  const potRect = potImg.getBoundingClientRect();
   const spoonWidth = spoon.el.offsetWidth;
   const spoonHeight = spoon.el.offsetHeight;
 
+  // Start position (center of spoon)
   const startRect = spoon.el.getBoundingClientRect();
   const startX = startRect.left + startRect.width/2 + window.scrollX;
   const startY = startRect.top + startRect.height/2 + window.scrollY;
 
-  const destX = targetRect.left + window.scrollX;
-  const destY = targetRect.top + window.scrollY;
+  // Destination: center of pot image
+  const destX = potRect.left + potRect.width/2 + window.scrollX;
+  const destY = potRect.top + potRect.height/2 + window.scrollY;
 
+  // Move spoon to body
   spoon.el.style.position = 'absolute';
   spoon.el.style.zIndex = 1000;
   document.body.appendChild(spoon.el);
 
-  const midX = (startX + destX)/2;
+  const midX = (startX + destX)/2 + (Math.random()*20 -10);
   const midY = (startY + destY)/2 - 120;
 
   let t=0;
@@ -233,14 +236,16 @@ function flyToPot(spoon, potKey){
     if(t<duration){
       requestAnimationFrame(animateArc);
     }else{
+      // Append to spoons-in-pot container and fan slightly
       const potContainer = potElements[potKey];
       const index = potContainer.children.length;
-      const rotation = -10 + index*7; // fan slightly
+      const rotation = -10 + index*7;
       spoon.el.style.position = 'relative';
       spoon.el.style.left = '0px';
       spoon.el.style.top = '0px';
       spoon.el.style.transform = `rotate(${rotation}deg)`;
       potContainer.appendChild(spoon.el);
+      spoon.flying = false;
     }
   }
   animateArc();
@@ -272,3 +277,4 @@ document.getElementById('resetButton').addEventListener('click', ()=>{
 
 </body>
 </html>
+
