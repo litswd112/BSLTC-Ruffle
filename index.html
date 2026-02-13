@@ -201,11 +201,14 @@ function flyToPot(spoon,potKey){
       requestAnimationFrame(animateArc);
     }else{
       const index=potCounts[potKey]-1;
-      const rotation=-15+(index*10);
+     const fanRotation = -15 + (index * 10);
 
-      spoon.el.style.left=(destX-spoonSize/2)+'px';
-      spoon.el.style.top=(destY-spoonSize/2)+'px';
-      spoon.el.style.transform=`rotate(${rotation}deg)`;
+// 90deg makes spoon upright (adjust if needed)
+const uprightAngle = 90;
+
+spoon.el.style.left = (destX - spoonSize/2) + 'px';
+spoon.el.style.top  = (destY - spoonSize/2) + 'px';
+spoon.el.style.transform = `rotate(${uprightAngle + fanRotation}deg)`;
     }
   }
 
@@ -230,3 +233,4 @@ document.getElementById('resetButton').addEventListener('click',()=>{
 
 </body>
 </html>
+
