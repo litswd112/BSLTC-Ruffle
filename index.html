@@ -113,6 +113,7 @@ let spoons = [];
 const potCounts = {A:0,B:0,C:0,D:0};
 const potMax = 4;
 
+// Create spoons
 function createSpoons(){
   spoons=[];
   for(let i=1;i<=totalSpoons;i++){
@@ -131,6 +132,7 @@ function createSpoons(){
 }
 createSpoons();
 
+// Animate spinning
 function animate(){
   angleOffset+=0.02;
 
@@ -155,6 +157,7 @@ function animate(){
 }
 animate();
 
+// Get random pot
 function getRandomPot(){
   const available=Object.keys(potCounts).filter(p=>potCounts[p]<potMax);
   if(!available.length) return null;
@@ -163,6 +166,7 @@ function getRandomPot(){
   return choice;
 }
 
+// Animate spoon flying into pot with bounce
 function flyToPot(spoon,potKey){
 
   spoon.flying=true;
@@ -172,7 +176,6 @@ function flyToPot(spoon,potKey){
   const areaRect=gameArea.getBoundingClientRect();
 
   const spoonSize=spoon.el.offsetWidth;
-
   const startRect=spoon.el.getBoundingClientRect();
 
   const startX=startRect.left-areaRect.left+spoonSize/2;
@@ -191,6 +194,7 @@ function flyToPot(spoon,potKey){
     t++;
     const p=t/duration;
 
+    // Quadratic Bezier
     const x=(1-p)*(1-p)*startX + 2*(1-p)*p*midX + p*p*destX;
     const y=(1-p)*(1-p)*startY + 2*(1-p)*p*midY + p*p*destY;
 
@@ -199,22 +203,27 @@ function flyToPot(spoon,potKey){
 
     if(t<duration){
       requestAnimationFrame(animateArc);
-    }else{
-      const index=potCounts[potKey]-1;
-     const fanRotation = -15 + (index * 10);
+    } else {
+      // Calculate fanned rotation for spoons in pot
+      const index = potCounts[potKey]-1;
+      const fanRotation = -10 + (index * 7);
 
-// 90deg makes spoon upright (adjust if needed)
-const uprightAngle = 90;
+      // Smooth bounce using CSS transitions
+      spoon.el.style.transition = 'transform 0.3s ease, top 0.3s ease';
+      spoon.el.style.transform = `rotate(${fanRotation}deg)`;
+      spoon.el.style.top = (destY-spoonSize/2 - 10) + 'px';
 
-spoon.el.style.left = (destX - spoonSize/2) + 'px';
-spoon.el.style.top  = (destY - spoonSize/2) + 'px';
-spoon.el.style.transform = `rotate(${uprightAngle + fanRotation}deg)`;
+      // After small delay, settle to final position
+      setTimeout(()=>{
+        spoon.el.style.top = (destY-spoonSize/2) + 'px';
+      }, 150);
     }
   }
 
   animateArc();
 }
 
+// Draw a spoon
 document.getElementById('drawButton').addEventListener('click',()=>{
   if(!spoons.length) return;
   const index=Math.floor(Math.random()*spoons.length);
@@ -223,6 +232,7 @@ document.getElementById('drawButton').addEventListener('click',()=>{
   if(potKey) flyToPot(spoon,potKey);
 });
 
+// Reset button
 document.getElementById('resetButton').addEventListener('click',()=>{
   spoons.forEach(s=>s.el.remove());
   for(let k in potCounts) potCounts[k]=0;
@@ -233,4 +243,3 @@ document.getElementById('resetButton').addEventListener('click',()=>{
 
 </body>
 </html>
-
