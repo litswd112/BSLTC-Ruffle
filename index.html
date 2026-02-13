@@ -166,7 +166,7 @@ function getRandomPot(){
   return choice;
 }
 
-// Animate spoon flying into pot with bounce
+// Animate spoon flying into pot with bounce and upright position
 function flyToPot(spoon,potKey){
 
   spoon.flying=true;
@@ -182,7 +182,7 @@ function flyToPot(spoon,potKey){
   const startY=startRect.top-areaRect.top+spoonSize/2;
 
   const destX=potRect.left-areaRect.left+potRect.width/2;
-  const destY=potRect.top-areaRect.top+potRect.height-30;
+  const destY=potRect.top-areaRect.top+potRect.height-50; // slightly higher so it sits upright
 
   const midX=(startX+destX)/2;
   const midY=(startY+destY)/2-120;
@@ -194,7 +194,6 @@ function flyToPot(spoon,potKey){
     t++;
     const p=t/duration;
 
-    // Quadratic Bezier
     const x=(1-p)*(1-p)*startX + 2*(1-p)*p*midX + p*p*destX;
     const y=(1-p)*(1-p)*startY + 2*(1-p)*p*midY + p*p*destY;
 
@@ -204,16 +203,14 @@ function flyToPot(spoon,potKey){
     if(t<duration){
       requestAnimationFrame(animateArc);
     } else {
-      // Calculate fanned rotation for spoons in pot
       const index = potCounts[potKey]-1;
-      const fanRotation = -10 + (index * 7);
+      const fanRotation = -5 + (index*5); // slight fanned angle so spoons are upright but not fully overlapping
 
-      // Smooth bounce using CSS transitions
+      // Smooth landing with tiny bounce
       spoon.el.style.transition = 'transform 0.3s ease, top 0.3s ease';
       spoon.el.style.transform = `rotate(${fanRotation}deg)`;
       spoon.el.style.top = (destY-spoonSize/2 - 10) + 'px';
 
-      // After small delay, settle to final position
       setTimeout(()=>{
         spoon.el.style.top = (destY-spoonSize/2) + 'px';
       }, 150);
