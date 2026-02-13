@@ -5,22 +5,98 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Terra Rossa Spoon Juggle</title>
 <style>
-  body { font-family: sans-serif; text-align: center; background-color: #fdf6e3; margin:0; padding:0; overflow-x:hidden;}
-  h1 { margin-top:20px; }
-  #character-container { position: relative; width: 90%; max-width:560px; margin:20px auto 0 auto; height:auto;}
-  #character { width:100%; display:block;}
-  .spoon { position:absolute; width:50px; height:50px; transform-origin:50% 50%; }
-  .pots { display:flex; justify-content:center; margin:20px auto; gap:20px; flex-wrap:wrap; max-width:560px;}
-  .pot { width:120px; height:120px; position:relative; }
-  .pot img { width:100%; height:auto; display:block;}
-  .spoons-in-pot { position:absolute; bottom:10px; left:10px; display:flex; gap:5px;}
-  #controls { margin-top:20px;}
-  #drawButton, #resetButton { padding:10px 20px; font-size:18px; margin:0 10px;}
-  @media (max-width:500px){
-    .spoon{ width:12vw; max-width:40px;}
-    .pot{ width:45%; max-width:100px;}
-    #drawButton, #resetButton{ font-size:16px; padding:8px 16px;}
-    h1{ font-size:18px;}
+  body {
+    font-family: sans-serif;
+    text-align: center;
+    background-color: #fdf6e3;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1 {
+    margin-top: 20px;
+  }
+
+  #character-container {
+    position: relative;
+    width: 90%;
+    max-width: 560px;
+    height: auto;
+    margin: 20px auto 0 auto;
+  }
+
+  #character {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .spoon {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    transform-origin: 50% 50%;
+  }
+
+  .pots {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+    gap: 20px;
+    flex-wrap: wrap;
+    max-width: 560px;
+  }
+
+  .pot {
+    width: 120px;
+    height: 120px;
+    position: relative;
+  }
+
+  .pot img {
+    width: 100%;
+    height: auto;
+  }
+
+  .spoons-in-pot {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    gap: 5px;
+  }
+
+  #controls {
+    margin-top: 20px;
+  }
+
+  #drawButton, #resetButton {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin: 0 10px;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 500px) {
+    .spoon {
+      width: 12vw;
+      max-width: 40px;
+    }
+
+    .pot {
+      width: 45%;
+      max-width: 100px;
+    }
+
+    #drawButton, #resetButton {
+      font-size: 16px;
+      padding: 8px 16px;
+    }
+
+    h1 {
+      font-size: 18px;
+    }
   }
 </style>
 </head>
@@ -59,49 +135,67 @@
 <script>
 const container = document.getElementById('character-container');
 const totalSpoons = 16;
+const radius = 100;
 let angleOffset = 0;
 let spoons = [];
 
-const potCounts = {A:0, B:0, C:0, D:0};
+const potCounts = { A:0, B:0, C:0, D:0 };
 const potMax = 4;
-const potElements = { A: document.getElementById('potA'), B: document.getElementById('potB'), C: document.getElementById('potC'), D: document.getElementById('potD')};
+const potElements = {
+  A: document.getElementById('potA'),
+  B: document.getElementById('potB'),
+  C: document.getElementById('potC'),
+  D: document.getElementById('potD')
+};
 
 // Create spoons
-function createSpoons() {
-  spoons = [];
+function createSpoons(){
+  spoons=[];
   for(let i=1;i<=totalSpoons;i++){
     const spoonEl=document.createElement('img');
     spoonEl.src=`spoon_${i}.png`;
     spoonEl.className='spoon';
     spoonEl.style.position='absolute';
     container.appendChild(spoonEl);
-    spoons.push({el:spoonEl, number:i, angle:(i/totalSpoons)*2*Math.PI, flying:false});
+
+    spoons.push({
+      el:spoonEl,
+      number:i,
+      angle:(i/totalSpoons)*2*Math.PI,
+      flying:false
+    });
   }
 }
 createSpoons();
 
-// Animate spinning above character
-function animate() {
-  angleOffset += 0.02;
+// Animate spinning
+function animate(){
+  angleOffset+=0.02;
+
   const centerX = container.offsetWidth/2;
   const centerY = container.offsetHeight/2 - 50;
+
   spoons.forEach(spoon=>{
     if(spoon.flying) return;
-    const baseX = centerX + 100*Math.cos(spoon.angle+angleOffset);
-    const baseY = centerY + 100*Math.sin(spoon.angle+angleOffset);
+
+    const baseX=centerX + radius*Math.cos(spoon.angle+angleOffset);
+    const baseY=centerY + radius*Math.sin(spoon.angle+angleOffset);
+
     const jitterX = Math.sin(angleOffset*3 + spoon.number)*10;
     const jitterY = Math.cos(angleOffset*2 + spoon.number)*8;
     const rotation = angleOffset*180 + spoon.number*20;
+
     spoon.el.style.left = (baseX + jitterX - 25) + 'px';
     spoon.el.style.top = (baseY + jitterY - 25) + 'px';
     spoon.el.style.transform = `rotate(${rotation}deg)`;
   });
+
   requestAnimationFrame(animate);
 }
 animate();
 
-// Random pot selection
-function getRandomPot() {
+// Get random pot
+function getRandomPot(){
   const available = Object.keys(potCounts).filter(p=>potCounts[p]<potMax);
   if(!available.length) return null;
   const choice = available[Math.floor(Math.random()*available.length)];
@@ -109,71 +203,97 @@ function getRandomPot() {
   return choice;
 }
 
-// Fly to pot with exact center landing
+// Animate spoon into pot
 function flyToPot(spoon, potKey){
-  spoon.flying = true;
-  const potContainer = document.getElementById('pot'+potKey);
-  const potRect = potContainer.getBoundingClientRect();
-  const startRect = spoon.el.getBoundingClientRect();
 
-  const startX = startRect.left + startRect.width/2;
-  const startY = startRect.top + startRect.height/2;
-  const destX = potRect.left + potRect.width/2;
-  const destY = potRect.top + potRect.height - 25; // bottom center
+  spoon.flying = true;
+
+  const potContainer = potElements[potKey].parentElement; // actual pot div
+  const potRect = potContainer.getBoundingClientRect();
+
+  const spoonWidth = spoon.el.offsetWidth;
+
+  const startRect = spoon.el.getBoundingClientRect();
+  const startX = startRect.left + window.scrollX + spoonWidth/2;
+  const startY = startRect.top + window.scrollY + spoonWidth/2;
+
+  // Center of pot
+  const destX = potRect.left + window.scrollX + potRect.width/2;
+  const destY = potRect.top + window.scrollY + potRect.height/2 + 15;
 
   spoon.el.style.position='absolute';
   spoon.el.style.zIndex=1000;
   document.body.appendChild(spoon.el);
 
-  const midX = (startX+destX)/2 + (Math.random()*20-10);
-  const midY = (startY+destY)/2 - 100;
+  const midX = (startX + destX)/2;
+  const midY = (startY + destY)/2 - 120;
 
   let t=0;
   const duration=60;
 
-  function animateArc() {
+  function animateArc(){
     t++;
     const progress=t/duration;
-    const x = (1-progress)*(1-progress)*startX + 2*(1-progress)*progress*midX + progress*progress*destX;
-    const y = (1-progress)*(1-progress)*startY + 2*(1-progress)*progress*midY + progress*progress*destY;
-    spoon.el.style.left = (x - spoon.el.offsetWidth/2)+'px';
-    spoon.el.style.top = (y - spoon.el.offsetHeight/2)+'px';
-    spoon.el.style.transform = `rotate(0deg)`; // upright in flight
-    if(t<duration) requestAnimationFrame(animateArc);
-    else {
-      const index = potContainer.children.length;
-      const rotation = -10 + index*7;
-      spoon.el.style.position='relative';
-      spoon.el.style.left='0px';
-      spoon.el.style.top='0px';
-      spoon.el.style.transform=`rotate(${rotation}deg)`;
-      potContainer.appendChild(spoon.el);
-      spoon.flying=false;
+
+    const x = (1-progress)*(1-progress)*startX
+            + 2*(1-progress)*progress*midX
+            + progress*progress*destX;
+
+    const y = (1-progress)*(1-progress)*startY
+            + 2*(1-progress)*progress*midY
+            + progress*progress*destY;
+
+    spoon.el.style.left = (x - spoonWidth/2) + 'px';
+    spoon.el.style.top = (y - spoonWidth/2) + 'px';
+
+    if(t<duration){
+      requestAnimationFrame(animateArc);
+    }else{
+      // Upright and fanned rotation
+      const index = potElements[potKey].children.length;
+      const rotation = -15 + index * 10;
+
+      spoon.el.style.width = '50px';
+      spoon.el.style.height = '50px';
+      spoon.el.style.transform = `rotate(${rotation}deg)`;
+      spoon.el.style.position = 'relative';
+      spoon.el.style.left = '0px';
+      spoon.el.style.top = '0px';
+
+      potElements[potKey].appendChild(spoon.el);
     }
   }
+
   animateArc();
 }
 
-// Draw button
+// Draw a spoon
 document.getElementById('drawButton').addEventListener('click', ()=>{
   if(!spoons.length) return;
-  const index = Math.floor(Math.random()*spoons.length);
-  const spoon = spoons.splice(index,1)[0];
-  const potKey = getRandomPot();
+
+  const index=Math.floor(Math.random()*spoons.length);
+  const spoon=spoons.splice(index,1)[0];
+
+  const potKey=getRandomPot();
   if(potKey) flyToPot(spoon,potKey);
 });
 
 // Reset button
 document.getElementById('resetButton').addEventListener('click', ()=>{
+
   Object.values(potElements).forEach(p=>{
     while(p.firstChild) p.removeChild(p.firstChild);
   });
+
   for(let key in potCounts) potCounts[key]=0;
+
   spoons.forEach(spoon=>{
     if(spoon.el.parentElement) spoon.el.remove();
   });
+
   createSpoons();
 });
 </script>
+
 </body>
 </html>
